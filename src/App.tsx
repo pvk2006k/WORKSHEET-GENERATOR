@@ -1,26 +1,48 @@
 import { useState, useRef } from 'react';
 import { WorksheetData } from './types';
 import { generateWorksheet } from './utils/aiGenerator';
+import { generateWorksheetWithAI, isAPIConfigured } from './utils/openAIService';
 import WorksheetForm from './components/WorksheetForm';
 import WorksheetPreview from './components/WorksheetPreview';
-import { FileText, Loader2, Sparkles } from 'lucide-react';
+import APIKeySettings from './components/APIKeySettings';
+import { FileText, Loader2, Sparkles, AlertCircle } from 'lucide-react';
 
 function App() {
   const [worksheet, setWorksheet] = useState<WorksheetData | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [studentName, setStudentName] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isAPIReady, setIsAPIReady] = useState(false);
   const worksheetRef = useRef<HTMLDivElement>(null);
 
   const handleGenerate = async (className: string, topic: string, numQuestions: number, name: string) => {
     setIsGenerating(true);
+    setError(null);
     setStudentName(name);
     
-    // Simulate AI processing time
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const data = generateWorksheet(className, topic, numQuestions);
-    setWorksheet(data);
-    setIsGenerating(false);
+    try {
+      let data: WorksheetData;
+      
+      if (isAPIConfigured()) {
+        // Use OpenAI API
+        data = await generateWorksheetWithAI(className, topic, numQuestions);
+      } else {
+        // Fallback to local generation with simulated delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        data = generateWorksheet(className, topic, numQuestions);
+      }
+      
+      setWorksheet(data);
+    } catch (err: any) {
+      console.error('Generation error:', err);
+      setError(err.message || 'Failed to generate worksheet. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleAPIKeySaved = () => {
+    setIsAPIReady(isAPIConfigured());
   };
 
   const handleReset = () => {
@@ -72,6 +94,25 @@ function App() {
                 Perfect for teachers, parents, and students!
               </p>
             </div>
+
+            {/* API Key Settings */}
+            <APIKeySettings onKeySaved={handleAPIKeySaved} />
+
+            {/* Error Display */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-red-800">{error}</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {error.includes('API key') 
+                      ? 'Please add your OpenAI API key above to use AI generation.'
+                      : 'You can still use the offline generator without an API key.'}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <WorksheetForm onGenerate={handleGenerate} />
             
             {/* Feature Cards */}
@@ -101,13 +142,22 @@ function App() {
               <div className="w-20 h-20 border-4 border-purple-200 rounded-full animate-spin border-t-purple-600"></div>
               <Loader2 className="w-8 h-8 text-purple-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-700 mt-6">Generating Your Worksheet...</h3>
-            <p className="text-gray-500 mt-2">AI is crafting questions just for you</p>
+            <h3 className="text-xl font-semibold text-gray-700 mt-6">
+              {isAPIConfigured() ? 'AI is Generating Your Worksheet...' : 'Generating Your Worksheet...'}
+            </h3>
+            <p className="text-gray-500 mt-2">
+              {isAPIConfigured() 
+                ? 'OpenAI is crafting personalized questions for you'
+                : 'Creating questions from our question bank'}
+            </p>
             <div className="flex gap-1 mt-4">
               <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
               <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
               <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
             </div>
+            {isAPIConfigured() && (
+              <p className="text-xs text-gray-400 mt-4">This may take 10-20 seconds...</p>
+            )}
           </div>
         )}
 
