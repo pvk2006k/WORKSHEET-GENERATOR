@@ -99,13 +99,39 @@ export default function APIKeySettings({ onKeySaved }: APIKeySettingsProps) {
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-amber-100 p-6 mb-6">
+      {/* Puter.js Notice */}
+      {window.puter && (
+        <div className="mb-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-sm">⚡</span>
+            </div>
+            <div className="flex-1">
+              <h4 className="font-semibold text-green-900 text-sm">Puter AI is Ready!</h4>
+              <p className="text-xs text-green-700 mt-1">
+                You're using Puter.js - a serverless AI solution that requires <strong>no API keys</strong>. 
+                AI-powered worksheet generation is available immediately!
+              </p>
+            </div>
+            <div className="flex items-center gap-1 text-green-600 text-xs font-medium">
+              <CheckCircle className="w-4 h-4" />
+              Active
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
           <Key className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h3 className="font-bold text-gray-800">AI API Key</h3>
-          <p className="text-xs text-gray-500">Choose your AI provider for worksheet generation</p>
+          <h3 className="font-bold text-gray-800">Alternative AI Providers (Optional)</h3>
+          <p className="text-xs text-gray-500">
+            {window.puter 
+              ? 'Puter AI is active. Add API keys for Groq or OpenAI as backup options.'
+              : 'Add API keys for Groq or OpenAI to enable AI-powered generation.'}
+          </p>
         </div>
         {isConfigured && (
           <div className="ml-auto flex items-center gap-1 text-green-600 text-xs font-medium">

@@ -3,6 +3,7 @@ import { WorksheetData } from './types';
 import { generateWorksheet } from './utils/aiGenerator';
 import { generateWorksheetWithAI, isAPIConfigured as isOpenAIConfigured } from './utils/openAIService';
 import { generateWorksheetWithGroq, isGroqConfigured } from './utils/groqService';
+import { generateWorksheetWithPuter } from './utils/puterService';
 import WorksheetForm from './components/WorksheetForm';
 import WorksheetPreview from './components/WorksheetPreview';
 import APIKeySettings from './components/APIKeySettings';
@@ -24,7 +25,11 @@ function App() {
     try {
       let data: WorksheetData;
       
-      if (isGroqConfigured()) {
+      // Check if Puter.js is available (no API key required)
+      if (window.puter) {
+        // Use Puter.js - serverless AI, no API key needed!
+        data = await generateWorksheetWithPuter(className, topic, numQuestions);
+      } else if (isGroqConfigured()) {
         // Use Groq API
         data = await generateWorksheetWithGroq(className, topic, numQuestions);
       } else if (isOpenAIConfigured()) {
@@ -127,9 +132,15 @@ function App() {
                 <p className="text-xs text-gray-500 mt-1">Professional layout with borders & watermarks</p>
               </div>
               <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-purple-100 text-center">
-                <div className="text-3xl mb-2">🤖</div>
-                <h4 className="font-semibold text-gray-700 text-sm">AI Generated</h4>
-                <p className="text-xs text-gray-500 mt-1">Smart questions with detailed explanations</p>
+                <div className="text-3xl mb-2">{window.puter ? '⚡' : '🤖'}</div>
+                <h4 className="font-semibold text-gray-700 text-sm">
+                  {window.puter ? 'Puter AI (Free!)' : 'AI Generated'}
+                </h4>
+                <p className="text-xs text-gray-500 mt-1">
+                  {window.puter 
+                    ? 'Serverless AI - no API key needed!'
+                    : 'Smart questions with detailed explanations'}
+                </p>
               </div>
               <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-purple-100 text-center">
                 <div className="text-3xl mb-2">📄</div>
@@ -147,10 +158,12 @@ function App() {
               <Loader2 className="w-8 h-8 text-purple-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
             </div>
             <h3 className="text-xl font-semibold text-gray-700 mt-6">
-              {(isGroqConfigured() || isOpenAIConfigured()) ? 'AI is Generating Your Worksheet...' : 'Generating Your Worksheet...'}
+              {(window.puter || isGroqConfigured() || isOpenAIConfigured()) ? 'AI is Generating Your Worksheet...' : 'Generating Your Worksheet...'}
             </h3>
             <p className="text-gray-500 mt-2">
-              {isGroqConfigured() 
+              {window.puter
+                ? 'Puter AI is crafting personalized questions for you (no API key needed!)'
+                : isGroqConfigured() 
                 ? 'Groq (Llama) is crafting personalized questions for you'
                 : isOpenAIConfigured()
                 ? 'OpenAI (GPT) is crafting personalized questions for you'

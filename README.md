@@ -1,20 +1,23 @@
 # Kids Knowledge Nest - AI Worksheet Generator
 
-A beautiful, AI-powered worksheet generator for creating professional educational worksheets for students from Class 1 to Class 12.
+A beautiful, AI-powered worksheet generator for creating professional educational worksheets for students from Class 1 to Class 12. **No API keys required!** Powered by Puter.js for serverless AI.
 
 ## Features
 
 ✨ **AI-Powered Question Generation**
-- Uses OpenAI GPT-4o-mini to generate contextually relevant questions
+- Uses **Puter.js** (serverless AI) - no API keys needed!
+- Optional support for Groq (Llama 3.3) and OpenAI (GPT-4o-mini)
 - Creates age-appropriate content based on class level
 - Generates multiple question types: multiple-choice, fill-in-the-blank, true/false
 - Includes detailed explanations for each answer
+- **AI-generated images** for visual questions using Puter.js txt2img
 
 🎨 **Professional Worksheet Design**
 - Beautiful A4-sized layouts with decorative borders
 - Custom watermarks (www.kidsknowledgenest.com)
 - Professional headers with student info, class, topic, practice set ID
 - Corner decorations and gradient accents
+- **AI-generated images** for visual questions
 - Print-ready formatting
 
 📚 **Comprehensive Content**
@@ -30,33 +33,35 @@ A beautiful, AI-powered worksheet generator for creating professional educationa
 
 ## Setup & Usage
 
-### 1. AI API Key (Required for AI Generation)
+### 1. No Setup Required! 🎉
 
-The app supports **two AI providers** - choose whichever you prefer:
+The app uses **Puter.js** - a serverless AI solution that requires:
+- ❌ No API keys
+- ❌ No backend setup
+- ❌ No server infrastructure
+- ✅ Just open and use!
 
-#### Option A: Groq (Recommended - Fast & Free)
+Puter.js provides free AI capabilities directly in the browser.
+
+### 2. Optional: Alternative AI Providers
+
+For advanced users, you can also configure:
+
+#### Groq (Fast & Free Tier)
 1. Get an API key from [Groq Console](https://console.groq.com/keys)
-2. Open the application
-3. Select **Groq** provider in the API Key section
-4. Enter your key (starts with `gsk_...`)
-5. Click "Save Key"
+2. Select **Groq** in the API Key section
+3. Enter your key (starts with `gsk_...`)
 - Uses **Llama 3.3 70B** model
-- Has a generous free tier
-- Very fast inference
 
-#### Option B: OpenAI (Premium)
+#### OpenAI (Premium)
 1. Get an API key from [OpenAI Platform](https://platform.openai.com/api-keys)
-2. Open the application
-3. Select **OpenAI** provider in the API Key section
-4. Enter your key (starts with `sk-...`)
-5. Click "Save Key"
+2. Select **OpenAI** in the API Key section
+3. Enter your key (starts with `sk-...`)
 - Uses **GPT-4o-mini** model
-- Paid API (requires credits)
-- High quality responses
 
-**Note:** Without an API key, the app will use a local question bank as a fallback.
+**Priority:** Puter.js → Groq → OpenAI → Local fallback
 
-Your key is stored locally in your browser and never sent to any server except the selected AI provider.
+Your API keys (if added) are stored locally in your browser.
 
 ### 2. Creating a Worksheet
 
@@ -114,8 +119,9 @@ Each generated worksheet includes:
 - **TypeScript** - Type safety
 - **Vite** - Build tool
 - **Tailwind CSS** - Styling
-- **Groq API** - AI question generation (Llama 3.3)
-- **OpenAI API** - AI question generation (GPT-4o-mini)
+- **Puter.js** - Serverless AI (text + image generation)
+- **Groq API** - Alternative AI (Llama 3.3)
+- **OpenAI API** - Alternative AI (GPT-4o-mini)
 - **html2canvas** - HTML to image conversion
 - **jsPDF** - PDF generation
 - **Lucide React** - Icons
@@ -124,13 +130,14 @@ Each generated worksheet includes:
 ```
 src/
 ├── components/
-│   ├── APIKeySettings.tsx      # API key management (Groq & OpenAI)
+│   ├── APIKeySettings.tsx      # Optional API key management
 │   ├── WorksheetForm.tsx       # Input form
-│   └── WorksheetPreview.tsx    # Worksheet display
+│   └── WorksheetPreview.tsx    # Worksheet display with images
 ├── utils/
 │   ├── aiGenerator.ts          # Local question generator (fallback)
-│   ├── groqService.ts          # Groq API integration (Llama 3.3)
-│   └── openAIService.ts        # OpenAI API integration (GPT-4o-mini)
+│   ├── puterService.ts         # Puter.js AI (text + images)
+│   ├── groqService.ts          # Groq API integration (optional)
+│   └── openAIService.ts        # OpenAI API integration (optional)
 ├── types.ts                    # TypeScript definitions
 ├── App.tsx                     # Main app component
 └── index.css                   # Global styles
@@ -146,27 +153,33 @@ src/
 
 ### Question Generation
 
-**With Groq API (Recommended):**
-- Uses Llama 3.3 70B Versatile model
+**With Puter.js (Default - No API Key):**
+- Serverless AI - no setup required
 - Generates unique, contextually relevant questions
 - Adapts to specific topics and class levels
 - Provides detailed explanations
+- **Generates AI images** for visual questions using txt2img
+- Takes 10-30 seconds to generate (includes image generation)
+- Completely free
+
+**With Groq API (Optional):**
+- Uses Llama 3.3 70B Versatile model
 - Very fast inference (5-15 seconds)
 - Free tier available
+- Text only (no image generation)
 
-**With OpenAI API:**
+**With OpenAI API (Optional):**
 - Uses GPT-4o-mini model
-- Generates unique, contextually relevant questions
-- Adapts to specific topics and class levels
-- Provides detailed explanations
-- Takes 10-20 seconds to generate
+- High quality responses
 - Paid API (requires credits)
+- Text only (no image generation)
 
-**Without API Key (Fallback):**
+**Without AI (Fallback):**
 - Uses predefined question banks
 - Limited to Math, Science, English, and GK
-- Faster generation (instant)
+- Instant generation
 - Less topic-specific
+- No images
 
 ## Tips for Best Results
 
@@ -187,7 +200,18 @@ src/
 
 ## Troubleshooting
 
-**"Invalid API key" error:**
+**Puter.js not loading:**
+- Ensure you have an internet connection
+- Try refreshing the page
+- Check browser console for errors
+- Puter.js requires internet to load the AI models
+
+**"Failed to parse AI response" error:**
+- The AI may have returned invalid JSON
+- Try again - this is usually temporary
+- If persistent, try switching to Groq or OpenAI
+
+**"Invalid API key" error (for Groq/OpenAI):**
 - For Groq: Check that your key starts with "gsk_"
 - For OpenAI: Check that your key starts with "sk-"
 - Verify the key is active in your account
@@ -198,6 +222,7 @@ src/
 - Check your usage limits
 - Groq has generous free tier limits
 - OpenAI requires sufficient credits
+- Puter.js has its own rate limits - try again after a short wait
 
 **Questions not relevant to topic:**
 - Be more specific in your topic description

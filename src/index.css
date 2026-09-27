@@ -396,6 +396,20 @@ body {
   font-weight: 500;
 }
 
+/* Question Image */
+.question-image {
+  margin: 12px 0;
+  text-align: center;
+}
+
+.question-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
 /* Options Grid */
 .options-grid {
   display: grid;

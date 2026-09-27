@@ -218,6 +218,18 @@ function WorksheetQuestionsPage({ worksheet }: { worksheet: WorksheetData }) {
               </div>
               <p className="question-text">{q.question}</p>
               
+              {/* Display image if available */}
+              {q.imageUrl && (
+                <div className="question-image">
+                  <img 
+                    src={q.imageUrl} 
+                    alt={`Illustration for question ${idx + 1}`}
+                    className="max-w-full h-auto rounded-lg border border-gray-200"
+                    style={{ maxHeight: '200px', objectFit: 'contain' }}
+                  />
+                </div>
+              )}
+              
               {q.type === 'multiple-choice' && q.options && (
                 <div className="options-grid">
                   {q.options.map((opt, optIdx) => (
