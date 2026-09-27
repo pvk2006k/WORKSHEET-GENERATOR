@@ -21,142 +21,80 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     
-    // Create a temporary container for paginated content
-    const tempContainer = document.createElement('div');
-    tempContainer.style.position = 'absolute';
-    tempContainer.style.left = '-9999px';
-    tempContainer.style.top = '0';
-    tempContainer.style.width = '210mm';
-    document.body.appendChild(tempContainer);
+    // Capture entire worksheet
+    const fullCanvas = await html2canvas(worksheetRef.current, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+    });
     
-    // Get all question and answer elements
-    const allElements = Array.from(worksheetRef.current.children);
+    const totalWidth = fullCanvas.width;
+    const totalHeight = fullCanvas.height;
     
-    let currentPage = document.createElement('div');
-    currentPage.className = 'pdf-page';
-    currentPage.style.width = '210mm';
-    currentPage.style.height = '297mm';
-    currentPage.style.padding = '15mm';
-    currentPage.style.background = 'white';
-    currentPage.style.position = 'relative';
-    currentPage.style.boxSizing = 'border-box';
-    tempContainer.appendChild(currentPage);
+    // A4 dimensions in pixels (at scale 2)
+    const pageWidth = totalWidth;
+    const pageHeight = Math.round((297 / 210) * totalWidth);
+    const headerHeight = 60; // pixels
+    const footerHeight = 60; // pixels
+    const contentHeight = pageHeight - headerHeight - footerHeight;
     
-    let currentHeight = 0;
-    const maxHeight = 267 * 3.78; // 297mm - 30mm for header/footer in pixels (approx)
-    let pageNum = 1;
+    // Calculate how many pages we need
+    const numPages = Math.ceil(totalHeight / contentHeight);
     
-    // Add header to first page
-    const addHeaderFooter = (page: HTMLElement, num: number) => {
-      const header = document.createElement('div');
-      header.style.position = 'absolute';
-      header.style.top = '0';
-      header.style.left = '0';
-      header.style.right = '0';
-      header.style.height = '15mm';
-      header.style.background = '#f3e8ff';
-      header.style.display = 'flex';
-      header.style.justifyContent = 'space-between';
-      header.style.alignItems = 'center';
-      header.style.padding = '0 10mm';
-      header.style.fontSize = '10pt';
-      header.style.fontWeight = 'bold';
-      header.style.color = '#7c3aed';
-      header.innerHTML = `
-        <span>www.kidsknowledgenest.com</span>
-        <span>${worksheet.practiceSetId} | Page ${num}</span>
-      `;
-      page.appendChild(header);
+    // Create each page
+    for (let i = 0; i < numPages; i++) {
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = pageWidth;
+      pageCanvas.height = pageHeight;
+      const ctx = pageCanvas.getContext('2d');
       
-      const footer = document.createElement('div');
-      footer.style.position = 'absolute';
-      footer.style.bottom = '0';
-      footer.style.left = '0';
-      footer.style.right = '0';
-      footer.style.height = '15mm';
-      footer.style.background = '#f3e8ff';
-      footer.style.display = 'flex';
-      footer.style.justifyContent = 'space-between';
-      footer.style.alignItems = 'center';
-      footer.style.padding = '0 10mm';
-      footer.style.fontSize = '10pt';
-      footer.style.fontWeight = 'bold';
-      footer.style.color = '#7c3aed';
-      footer.innerHTML = `
-        <span>© Kids Knowledge Nest</span>
-        <span>Page ${num}</span>
-      `;
-      page.appendChild(footer);
-    };
-    
-    addHeaderFooter(currentPage, pageNum);
-    currentHeight = 15 * 3.78; // Account for header
-    
-    // Clone and paginate elements
-    for (const element of allElements) {
-      const clone = element.cloneNode(true) as HTMLElement;
+      if (!ctx) continue;
       
-      // Measure the element
-      const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.visibility = 'hidden';
-      tempDiv.style.width = '180mm'; // Account for padding
-      tempDiv.appendChild(clone);
-      document.body.appendChild(tempDiv);
-      const elementHeight = clone.offsetHeight;
-      document.body.removeChild(tempDiv);
+      // White background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, pageWidth, pageHeight);
       
-      // Check if element fits on current page
-      if (currentHeight + elementHeight > maxHeight) {
-        // Start new page
-        pageNum++;
-        currentPage = document.createElement('div');
-        currentPage.className = 'pdf-page';
-        currentPage.style.width = '210mm';
-        currentPage.style.height = '297mm';
-        currentPage.style.padding = '15mm';
-        currentPage.style.background = 'white';
-        currentPage.style.position = 'relative';
-        currentPage.style.boxSizing = 'border-box';
-        tempContainer.appendChild(currentPage);
-        
-        addHeaderFooter(currentPage, pageNum);
-        currentHeight = 15 * 3.78; // Account for header
-      }
+      // Draw header
+      ctx.fillStyle = '#f3e8ff';
+      ctx.fillRect(0, 0, pageWidth, headerHeight);
+      ctx.fillStyle = '#7c3aed';
+      ctx.font = `bold ${Math.round(pageWidth * 0.018)}px Arial`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText('www.kidsknowledgenest.com', pageWidth * 0.03, headerHeight / 2);
+      ctx.textAlign = 'right';
+      ctx.fillText(`${worksheet.practiceSetId} | Page ${i + 1}`, pageWidth * 0.97, headerHeight / 2);
+      ctx.textAlign = 'left';
       
-      // Add element to current page
-      const contentWrapper = document.createElement('div');
-      contentWrapper.style.marginTop = '5mm';
-      contentWrapper.style.marginBottom = '5mm';
-      contentWrapper.appendChild(clone);
-      currentPage.appendChild(contentWrapper);
-      currentHeight += elementHeight + 10 * 3.78; // Add spacing
-    }
-    
-    // Now capture each page
-    const pages = tempContainer.querySelectorAll('.pdf-page');
-    
-    for (let i = 0; i < pages.length; i++) {
-      const pageElement = pages[i] as HTMLElement;
+      // Draw content slice
+      const sourceY = i * contentHeight;
+      const sliceHeight = Math.min(contentHeight, totalHeight - sourceY);
       
-      const canvas = await html2canvas(pageElement, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-      });
+      ctx.drawImage(
+        fullCanvas,
+        0, sourceY, totalWidth, sliceHeight,
+        0, headerHeight, pageWidth, sliceHeight
+      );
       
-      const imgData = canvas.toDataURL('image/png');
+      // Draw footer
+      ctx.fillStyle = '#f3e8ff';
+      ctx.fillRect(0, pageHeight - footerHeight, pageWidth, footerHeight);
+      ctx.fillStyle = '#7c3aed';
+      ctx.font = `bold ${Math.round(pageWidth * 0.016)}px Arial`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText('© Kids Knowledge Nest', pageWidth * 0.03, pageHeight - footerHeight / 2);
+      ctx.textAlign = 'right';
+      ctx.fillText(`Page ${i + 1}`, pageWidth * 0.97, pageHeight - footerHeight / 2);
+      ctx.textAlign = 'left';
       
+      // Add to PDF
       if (i > 0) {
         pdf.addPage();
       }
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      const pageImgData = pageCanvas.toDataURL('image/png');
+      pdf.addImage(pageImgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
     }
-    
-    // Clean up
-    document.body.removeChild(tempContainer);
     
     pdf.save(`${worksheet.practiceSetId}.pdf`);
   };
@@ -164,137 +102,81 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
   const handleDownloadImage = async () => {
     if (!worksheetRef.current) return;
     
-    // Create a temporary container for paginated content
-    const tempContainer = document.createElement('div');
-    tempContainer.style.position = 'absolute';
-    tempContainer.style.left = '-9999px';
-    tempContainer.style.top = '0';
-    tempContainer.style.width = '210mm';
-    document.body.appendChild(tempContainer);
+    // Capture entire worksheet
+    const fullCanvas = await html2canvas(worksheetRef.current, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+    });
     
-    // Get all elements
-    const allElements = Array.from(worksheetRef.current.children);
+    const totalWidth = fullCanvas.width;
+    const totalHeight = fullCanvas.height;
     
-    let currentPage = document.createElement('div');
-    currentPage.className = 'image-page';
-    currentPage.style.width = '210mm';
-    currentPage.style.height = '297mm';
-    currentPage.style.padding = '15mm';
-    currentPage.style.background = 'white';
-    currentPage.style.position = 'relative';
-    currentPage.style.boxSizing = 'border-box';
-    tempContainer.appendChild(currentPage);
+    // A4 dimensions in pixels (at scale 2)
+    const pageWidth = totalWidth;
+    const pageHeight = Math.round((297 / 210) * totalWidth);
+    const headerHeight = 60; // pixels
+    const footerHeight = 60; // pixels
+    const contentHeight = pageHeight - headerHeight - footerHeight;
     
-    let currentHeight = 0;
-    const maxHeight = 267 * 3.78;
-    let pageNum = 1;
+    // Calculate how many pages we need
+    const numPages = Math.ceil(totalHeight / contentHeight);
     
-    // Add header to first page
-    const addHeaderFooter = (page: HTMLElement, num: number) => {
-      const header = document.createElement('div');
-      header.style.position = 'absolute';
-      header.style.top = '0';
-      header.style.left = '0';
-      header.style.right = '0';
-      header.style.height = '15mm';
-      header.style.background = '#f3e8ff';
-      header.style.display = 'flex';
-      header.style.justifyContent = 'space-between';
-      header.style.alignItems = 'center';
-      header.style.padding = '0 10mm';
-      header.style.fontSize = '10pt';
-      header.style.fontWeight = 'bold';
-      header.style.color = '#7c3aed';
-      header.innerHTML = `
-        <span>www.kidsknowledgenest.com</span>
-        <span>${worksheet.practiceSetId} | Page ${num}</span>
-      `;
-      page.appendChild(header);
+    // Create and download each page
+    for (let i = 0; i < numPages; i++) {
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = pageWidth;
+      pageCanvas.height = pageHeight;
+      const ctx = pageCanvas.getContext('2d');
       
-      const footer = document.createElement('div');
-      footer.style.position = 'absolute';
-      footer.style.bottom = '0';
-      footer.style.left = '0';
-      footer.style.right = '0';
-      footer.style.height = '15mm';
-      footer.style.background = '#f3e8ff';
-      footer.style.display = 'flex';
-      footer.style.justifyContent = 'space-between';
-      footer.style.alignItems = 'center';
-      footer.style.padding = '0 10mm';
-      footer.style.fontSize = '10pt';
-      footer.style.fontWeight = 'bold';
-      footer.style.color = '#7c3aed';
-      footer.innerHTML = `
-        <span>© Kids Knowledge Nest</span>
-        <span>Page ${num}</span>
-      `;
-      page.appendChild(footer);
-    };
-    
-    addHeaderFooter(currentPage, pageNum);
-    currentHeight = 15 * 3.78;
-    
-    // Clone and paginate elements
-    for (const element of allElements) {
-      const clone = element.cloneNode(true) as HTMLElement;
+      if (!ctx) continue;
       
-      const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.visibility = 'hidden';
-      tempDiv.style.width = '180mm';
-      tempDiv.appendChild(clone);
-      document.body.appendChild(tempDiv);
-      const elementHeight = clone.offsetHeight;
-      document.body.removeChild(tempDiv);
+      // White background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, pageWidth, pageHeight);
       
-      if (currentHeight + elementHeight > maxHeight) {
-        pageNum++;
-        currentPage = document.createElement('div');
-        currentPage.className = 'image-page';
-        currentPage.style.width = '210mm';
-        currentPage.style.height = '297mm';
-        currentPage.style.padding = '15mm';
-        currentPage.style.background = 'white';
-        currentPage.style.position = 'relative';
-        currentPage.style.boxSizing = 'border-box';
-        tempContainer.appendChild(currentPage);
-        
-        addHeaderFooter(currentPage, pageNum);
-        currentHeight = 15 * 3.78;
-      }
+      // Draw header
+      ctx.fillStyle = '#f3e8ff';
+      ctx.fillRect(0, 0, pageWidth, headerHeight);
+      ctx.fillStyle = '#7c3aed';
+      ctx.font = `bold ${Math.round(pageWidth * 0.018)}px Arial`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText('www.kidsknowledgenest.com', pageWidth * 0.03, headerHeight / 2);
+      ctx.textAlign = 'right';
+      ctx.fillText(`${worksheet.practiceSetId} | Page ${i + 1}`, pageWidth * 0.97, headerHeight / 2);
+      ctx.textAlign = 'left';
       
-      const contentWrapper = document.createElement('div');
-      contentWrapper.style.marginTop = '5mm';
-      contentWrapper.style.marginBottom = '5mm';
-      contentWrapper.appendChild(clone);
-      currentPage.appendChild(contentWrapper);
-      currentHeight += elementHeight + 10 * 3.78;
-    }
-    
-    // Capture and download each page
-    const pages = tempContainer.querySelectorAll('.image-page');
-    
-    for (let i = 0; i < pages.length; i++) {
-      const pageElement = pages[i] as HTMLElement;
+      // Draw content slice
+      const sourceY = i * contentHeight;
+      const sliceHeight = Math.min(contentHeight, totalHeight - sourceY);
       
-      const canvas = await html2canvas(pageElement, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-      });
+      ctx.drawImage(
+        fullCanvas,
+        0, sourceY, totalWidth, sliceHeight,
+        0, headerHeight, pageWidth, sliceHeight
+      );
       
+      // Draw footer
+      ctx.fillStyle = '#f3e8ff';
+      ctx.fillRect(0, pageHeight - footerHeight, pageWidth, footerHeight);
+      ctx.fillStyle = '#7c3aed';
+      ctx.font = `bold ${Math.round(pageWidth * 0.016)}px Arial`;
+      ctx.textBaseline = 'middle';
+      ctx.fillText('© Kids Knowledge Nest', pageWidth * 0.03, pageHeight - footerHeight / 2);
+      ctx.textAlign = 'right';
+      ctx.fillText(`Page ${i + 1}`, pageWidth * 0.97, pageHeight - footerHeight / 2);
+      ctx.textAlign = 'left';
+      
+      // Download this page
       const link = document.createElement('a');
       link.download = `${worksheet.practiceSetId}_page_${i + 1}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = pageCanvas.toDataURL('image/png');
       link.click();
       
+      // Delay between downloads
       await new Promise(resolve => setTimeout(resolve, 300));
     }
-    
-    // Clean up
-    document.body.removeChild(tempContainer);
   };
 
   // Group questions by type

@@ -8,11 +8,13 @@ body {
 /* Worksheet Container - CONTINUOUS FLOW */
 .worksheet-continuous {
   width: 210mm;
+  min-height: 297mm;
   background: linear-gradient(135deg, #fefefe 0%, #f8f9ff 100%);
   position: relative;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   padding: 20mm 15mm;
   margin: 0 auto;
+  page-break-after: always;
 }
 
 /* Decorative patterns for worksheet */
@@ -924,10 +926,11 @@ body {
   }
 
   .worksheet-continuous {
-    width: 100%;
+    width: 210mm;
     box-shadow: none;
-    padding: 0;
+    padding: 15mm;
     margin: 0;
+    page-break-after: always;
   }
 
   /* Prevent cutting of questions and answers */
