@@ -43,23 +43,52 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
     pdf.save(`${worksheet.practiceSetId}.pdf`);
   };
 
+  const handleDownloadImage = async () => {
+    if (!worksheetRef.current) return;
+    
+    const pages = worksheetRef.current.querySelectorAll('.worksheet-page');
+    
+    for (let i = 0; i < pages.length; i++) {
+      const canvas = await html2canvas(pages[i] as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+      
+      const link = document.createElement('a');
+      link.download = `${worksheet.practiceSetId}_page_${i + 1}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+  };
+
   return (
     <div>
       {/* Action Buttons */}
-      <div className="flex justify-center gap-4 mb-6 print:hidden">
+      <div className="flex flex-wrap justify-center gap-3 mb-6 print:hidden">
         <button
           onClick={handlePrint}
-          className="flex items-center gap-2 px-6 py-3 bg-white border border-purple-200 text-purple-700 rounded-xl hover:bg-purple-50 transition-all shadow-sm"
+          className="flex items-center gap-2 px-5 py-2.5 bg-white border border-purple-200 text-purple-700 rounded-xl hover:bg-purple-50 transition-all shadow-sm text-sm font-medium"
         >
           <Printer className="w-4 h-4" />
-          Print Worksheet
+          Print
         </button>
         <button
           onClick={handleDownloadPDF}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md text-sm font-medium"
         >
           <Download className="w-4 h-4" />
           Download PDF
+        </button>
+        <button
+          onClick={handleDownloadImage}
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-xl hover:from-pink-600 hover:to-rose-600 transition-all shadow-md text-sm font-medium"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Download Images
         </button>
       </div>
 

@@ -26,4 +26,5 @@ export interface WorksheetForm {
   topic: string;
   studentName: string;
   numberOfQuestions: number;
+  practiceSetId: string;
 }

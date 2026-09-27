@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { BookOpen, GraduationCap, PenTool, Hash } from 'lucide-react';
 
 interface WorksheetFormProps {
-  onGenerate: (className: string, topic: string, numQuestions: number, name: string) => void;
+  onGenerate: (className: string, topic: string, numQuestions: number, name: string, practiceSetId: string) => void;
 }
 
 const classes = [
@@ -21,11 +21,12 @@ export default function WorksheetForm({ onGenerate }: WorksheetFormProps) {
   const [topic, setTopic] = useState('');
   const [studentName, setStudentName] = useState('');
   const [numQuestions, setNumQuestions] = useState(10);
+  const [practiceSetId, setPracticeSetId] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!className || !topic) return;
-    onGenerate(className, topic, numQuestions, studentName || 'Student');
+    onGenerate(className, topic, numQuestions, studentName || 'Student', practiceSetId);
   };
 
   return (
@@ -48,6 +49,24 @@ export default function WorksheetForm({ onGenerate }: WorksheetFormProps) {
             placeholder="Enter student name"
             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-gray-700"
           />
+        </div>
+
+        {/* Practice Set ID */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+            <Hash className="w-4 h-4 text-purple-500" />
+            Practice Set ID (Optional)
+          </label>
+          <input
+            type="text"
+            value={practiceSetId}
+            onChange={(e) => setPracticeSetId(e.target.value)}
+            placeholder="e.g., MATH-001, SCI-PRACTICE-5, etc."
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all text-gray-700"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Leave blank to auto-generate, or enter your own custom ID
+          </p>
         </div>
 
         {/* Class Selection */}

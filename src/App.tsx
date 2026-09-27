@@ -17,7 +17,7 @@ function App() {
   const [isAPIReady, setIsAPIReady] = useState(false);
   const worksheetRef = useRef<HTMLDivElement>(null);
 
-  const handleGenerate = async (className: string, topic: string, numQuestions: number, name: string) => {
+  const handleGenerate = async (className: string, topic: string, numQuestions: number, name: string, practiceSetId: string) => {
     setIsGenerating(true);
     setError(null);
     setStudentName(name);
@@ -28,7 +28,7 @@ function App() {
       // Check if Puter.js is available (no API key required)
       if (window.puter) {
         // Use Puter.js - serverless AI, no API key needed!
-        data = await generateWorksheetWithPuter(className, topic, numQuestions);
+        data = await generateWorksheetWithPuter(className, topic, numQuestions, practiceSetId);
       } else if (isGroqConfigured()) {
         // Use Groq API
         data = await generateWorksheetWithGroq(className, topic, numQuestions);
@@ -39,6 +39,11 @@ function App() {
         // Fallback to local generation with simulated delay
         await new Promise(resolve => setTimeout(resolve, 1500));
         data = generateWorksheet(className, topic, numQuestions);
+      }
+      
+      // Override practice set ID if user provided one
+      if (practiceSetId && data) {
+        data.practiceSetId = practiceSetId;
       }
       
       setWorksheet(data);

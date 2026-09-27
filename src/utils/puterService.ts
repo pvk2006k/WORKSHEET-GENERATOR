@@ -10,37 +10,72 @@ declare global {
 export async function generateWorksheetWithPuter(
   className: string,
   topic: string,
-  numQuestions: number
+  numQuestions: number,
+  practiceSetId?: string
 ): Promise<WorksheetData> {
-  const prompt = `Create a worksheet for ${className} students on the topic "${topic}".
+  // Extract class number for pedagogy level
+  const classMatch = className.match(/\d+/);
+  const classNumber = classMatch ? parseInt(classMatch[0]) : 5;
+  
+  // Determine pedagogy level based on class
+  let pedagogyLevel = '';
+  let languageStyle = '';
+  let difficultyNotes = '';
+  
+  if (classNumber <= 2) {
+    pedagogyLevel = 'early elementary (ages 6-7)';
+    languageStyle = 'Use very simple words, short sentences, and concrete examples. Questions should be straightforward and visual.';
+    difficultyNotes = 'Focus on basic concepts, recognition, and simple recall. Use familiar objects and everyday situations.';
+  } else if (classNumber <= 5) {
+    pedagogyLevel = 'elementary (ages 8-11)';
+    languageStyle = 'Use clear, simple language with some subject-specific vocabulary. Include relatable examples.';
+    difficultyNotes = 'Mix of recall and basic understanding. Questions should build foundational knowledge.';
+  } else if (classNumber <= 8) {
+    pedagogyLevel = 'middle school (ages 12-14)';
+    languageStyle = 'Use age-appropriate academic language. Include some technical terms with explanations.';
+    difficultyNotes = 'Focus on understanding, application, and some analysis. Questions should develop critical thinking.';
+  } else {
+    pedagogyLevel = 'high school (ages 15-18)';
+    languageStyle = 'Use formal academic language with subject-specific terminology.';
+    difficultyNotes = 'Emphasize analysis, evaluation, and synthesis. Questions should challenge higher-order thinking.';
+  }
+
+  const prompt = `Create an educational worksheet for ${className} students (pedagogy level: ${pedagogyLevel}) on the topic "${topic}".
+
+IMPORTANT PEDAGOGICAL GUIDELINES:
+- ${languageStyle}
+- ${difficultyNotes}
+- Ensure cognitive load is appropriate for the age group
+- Use scaffolding: start with easier questions, progress to more challenging ones
+- Make questions engaging and relevant to students' lives
 
 Generate exactly ${numQuestions} questions that are:
-- Age-appropriate for ${className}
+- Age-appropriate for ${className} (${pedagogyLevel})
 - Include a mix of question types (multiple choice, fill-in-the-blank, true/false)
-- Educational and engaging
-- Include clear explanations for each answer
-- For 2-3 questions, suggest an image prompt that would help illustrate the question
+- Educational, engaging, and fun for kids
+- Include clear, kid-friendly explanations for each answer
+- For 2-3 questions, suggest an image prompt that would help illustrate the question (make it colorful and appealing for children)
 
 Format your response as a JSON object with this structure:
 {
-  "title": "Worksheet title",
+  "title": "Worksheet title (make it fun and engaging for kids)",
   "subject": "Subject name",
   "instructions": ["instruction 1", "instruction 2", ...],
   "questions": [
     {
       "id": 1,
       "type": "multiple-choice" | "fill-in-blank" | "true-false",
-      "question": "Question text",
+      "question": "Question text (age-appropriate language)",
       "options": ["option a", "option b", "option c", "option d"] (only for multiple-choice),
       "correctAnswer": "Correct answer",
-      "explanation": "Detailed explanation of why this is correct",
+      "explanation": "Kid-friendly explanation of why this is correct",
       "points": 2,
-      "imagePrompt": "Detailed description of an educational illustration for this question" (optional, for 2-3 questions only)
+      "imagePrompt": "Colorful, fun, educational illustration description suitable for children" (optional, for 2-3 questions only)
     }
   ]
 }
 
-Make sure all questions are relevant to ${className} level and the topic "${topic}".`;
+Make sure all questions are pedagogically appropriate for ${className} level and the topic "${topic}".`;
 
   try {
     const response = await window.puter.ai.chat(prompt);
@@ -60,8 +95,8 @@ Make sure all questions are relevant to ${className} level and the topic "${topi
       throw new Error('Failed to parse AI response. Please try again.');
     }
 
-    // Generate practice set ID
-    const practiceSetId = `PSET-${className.replace(/\s/g, '').toUpperCase()}-${Date.now().toString(36).toUpperCase().slice(-4)}`;
+    // Generate practice set ID (use user-provided one if available)
+    const generatedPracticeSetId = practiceSetId || `PSET-${className.replace(/\s/g, '').toUpperCase()}-${Date.now().toString(36).toUpperCase().slice(-4)}`;
 
     // Calculate total marks
     const totalMarks = aiResponse.questions.reduce((sum: number, q: Question) => sum + (q.points || 2), 0);
@@ -96,7 +131,7 @@ Make sure all questions are relevant to ${className} level and the topic "${topi
 
     const worksheet: WorksheetData = {
       title: aiResponse.title || `${topic} - Practice Worksheet`,
-      practiceSetId,
+      practiceSetId: generatedPracticeSetId,
       className,
       subject: aiResponse.subject || topic,
       topic,
