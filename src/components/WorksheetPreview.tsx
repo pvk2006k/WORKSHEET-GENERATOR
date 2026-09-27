@@ -17,63 +17,60 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
   const handleDownloadPDF = async () => {
     if (!worksheetRef.current) return;
     
-    const pages = worksheetRef.current.querySelectorAll('.worksheet-page');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     
-    // Process each page individually with correct sizing
-    for (let i = 0; i < pages.length; i++) {
-      const pageElement = pages[i] as HTMLElement;
+    // Capture the entire worksheet as one tall image
+    const canvas = await html2canvas(worksheetRef.current, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+    });
+    
+    const totalWidth = canvas.width;
+    const totalHeight = canvas.height;
+    
+    // Calculate how many A4 pages we need
+    // A4 ratio is 210:297, so height should be (297/210) * width
+    const a4PageHeight = (297 / 210) * totalWidth;
+    const numPages = Math.ceil(totalHeight / a4PageHeight);
+    
+    // Slice the canvas into A4-sized pages
+    for (let i = 0; i < numPages; i++) {
+      const startY = i * a4PageHeight;
+      const sliceHeight = Math.min(a4PageHeight, totalHeight - startY);
       
-      // Capture the page at high quality
-      const canvas = await html2canvas(pageElement, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        width: pageElement.offsetWidth,
-        height: pageElement.offsetHeight,
-        windowWidth: pageElement.offsetWidth,
-        windowHeight: pageElement.offsetHeight,
-      });
+      // Create a canvas for this page
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = totalWidth;
+      pageCanvas.height = a4PageHeight;
+      const ctx = pageCanvas.getContext('2d');
       
-      const imgData = canvas.toDataURL('image/png');
-      
-      // Calculate dimensions to fit A4 page while maintaining aspect ratio
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      
-      // A4 aspect ratio is 210:297 (width:height)
-      const a4AspectRatio = pdfWidth / pdfHeight;
-      const imgAspectRatio = imgWidth / imgHeight;
-      
-      let finalWidth: number;
-      let finalHeight: number;
-      let x: number;
-      let y: number;
-      
-      if (imgAspectRatio > a4AspectRatio) {
-        // Image is wider than A4 ratio - fit to width
-        finalWidth = pdfWidth;
-        finalHeight = pdfWidth / imgAspectRatio;
-        x = 0;
-        y = (pdfHeight - finalHeight) / 2;
-      } else {
-        // Image is taller than A4 ratio - fit to height
-        finalHeight = pdfHeight;
-        finalWidth = pdfHeight * imgAspectRatio;
-        x = (pdfWidth - finalWidth) / 2;
-        y = 0;
+      if (ctx) {
+        // Fill with white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, totalWidth, a4PageHeight);
+        
+        // Draw the slice from the original canvas
+        ctx.drawImage(
+          canvas,
+          0, startY, totalWidth, sliceHeight, // source
+          0, 0, totalWidth, sliceHeight // destination
+        );
+        
+        // Convert to image data
+        const pageImgData = pageCanvas.toDataURL('image/png');
+        
+        // Add to PDF
+        if (i > 0) {
+          pdf.addPage();
+        }
+        
+        // Add image to fill the entire A4 page
+        pdf.addImage(pageImgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       }
-      
-      // Add new page if not the first page
-      if (i > 0) {
-        pdf.addPage();
-      }
-      
-      // Add image to PDF
-      pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
     }
     
     pdf.save(`${worksheet.practiceSetId}.pdf`);
@@ -82,29 +79,53 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
   const handleDownloadImage = async () => {
     if (!worksheetRef.current) return;
     
-    const pages = worksheetRef.current.querySelectorAll('.worksheet-page');
+    // Capture the entire worksheet as one tall image
+    const canvas = await html2canvas(worksheetRef.current, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+    });
     
-    for (let i = 0; i < pages.length; i++) {
-      const pageElement = pages[i] as HTMLElement;
+    const totalWidth = canvas.width;
+    const totalHeight = canvas.height;
+    
+    // Calculate A4 page height
+    const a4PageHeight = (297 / 210) * totalWidth;
+    const numPages = Math.ceil(totalHeight / a4PageHeight);
+    
+    // Slice and download each page
+    for (let i = 0; i < numPages; i++) {
+      const startY = i * a4PageHeight;
+      const sliceHeight = Math.min(a4PageHeight, totalHeight - startY);
       
-      const canvas = await html2canvas(pageElement, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        width: pageElement.offsetWidth,
-        height: pageElement.offsetHeight,
-        windowWidth: pageElement.offsetWidth,
-        windowHeight: pageElement.offsetHeight,
-      });
+      // Create a canvas for this page
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = totalWidth;
+      pageCanvas.height = a4PageHeight;
+      const ctx = pageCanvas.getContext('2d');
       
-      const link = document.createElement('a');
-      link.download = `${worksheet.practiceSetId}_page_${i + 1}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      
-      // Small delay between downloads to prevent browser blocking
-      await new Promise(resolve => setTimeout(resolve, 300));
+      if (ctx) {
+        // Fill with white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, totalWidth, a4PageHeight);
+        
+        // Draw the slice from the original canvas
+        ctx.drawImage(
+          canvas,
+          0, startY, totalWidth, sliceHeight,
+          0, 0, totalWidth, sliceHeight
+        );
+        
+        // Download this page
+        const link = document.createElement('a');
+        link.download = `${worksheet.practiceSetId}_page_${i + 1}.png`;
+        link.href = pageCanvas.toDataURL('image/png');
+        link.click();
+        
+        // Delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
     }
   };
 
