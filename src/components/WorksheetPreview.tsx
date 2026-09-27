@@ -161,21 +161,27 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
       {/* Worksheet Content */}
       <div ref={worksheetRef} className="worksheet-container">
         {/* Page 1 - Cover/Header Page */}
-        <WorksheetCoverPage worksheet={worksheet} studentName={studentName} />
+        <WorksheetCoverPage worksheet={worksheet} studentName={studentName} pageNumber={1} />
         
         {/* Question Pages */}
-        <WorksheetQuestionsPage worksheet={worksheet} />
+        <WorksheetQuestionsPage worksheet={worksheet} pageNumber={2} />
         
         {/* Answer Key Page */}
-        <WorksheetAnswerPage worksheet={worksheet} />
+        <WorksheetAnswerPage worksheet={worksheet} pageNumber={3} />
       </div>
     </div>
   );
 }
 
-function WorksheetCoverPage({ worksheet, studentName }: { worksheet: WorksheetData; studentName: string }) {
+function WorksheetCoverPage({ worksheet, studentName, pageNumber }: { worksheet: WorksheetData; studentName: string; pageNumber: number }) {
   return (
     <div className="worksheet-page">
+      {/* Page Header */}
+      <div className="page-top-header">
+        <span className="page-website">www.kidsknowledgenest.com</span>
+        <span className="page-info">{worksheet.practiceSetId} | Page {pageNumber}</span>
+      </div>
+      
       {/* Watermark */}
       <div className="watermark">www.kidsknowledgenest.com</div>
       
@@ -257,11 +263,17 @@ function WorksheetCoverPage({ worksheet, studentName }: { worksheet: WorksheetDa
           </div>
         </div>
       </div>
+      
+      {/* Page Footer */}
+      <div className="page-bottom-footer">
+        <span className="page-website">© Kids Knowledge Nest</span>
+        <span className="page-info">Page {pageNumber}</span>
+      </div>
     </div>
   );
 }
 
-function WorksheetQuestionsPage({ worksheet }: { worksheet: WorksheetData }) {
+function WorksheetQuestionsPage({ worksheet, pageNumber }: { worksheet: WorksheetData; pageNumber: number }) {
   // Group questions by type
   const trueFalseQuestions = worksheet.questions.filter(q => q.type === 'true-false');
   const mcqQuestions = worksheet.questions.filter(q => q.type === 'multiple-choice');
@@ -273,6 +285,13 @@ function WorksheetQuestionsPage({ worksheet }: { worksheet: WorksheetData }) {
 
   return (
     <div className="worksheet-page">
+      {/* Page Header */}
+      <div className="page-top-header">
+        <span className="page-website">www.kidsknowledgenest.com</span>
+        <span className="page-info">{worksheet.practiceSetId} | Page {pageNumber}</span>
+      </div>
+      
+      {/* Watermark */}
       <div className="watermark">www.kidsknowledgenest.com</div>
       
       <div className="page-border">
@@ -486,13 +505,26 @@ function WorksheetQuestionsPage({ worksheet }: { worksheet: WorksheetData }) {
           <span>Good Luck! 🍀</span>
         </div>
       </div>
+      
+      {/* Page Footer */}
+      <div className="page-bottom-footer">
+        <span className="page-website">© Kids Knowledge Nest</span>
+        <span className="page-info">Page {pageNumber}</span>
+      </div>
     </div>
   );
 }
 
-function WorksheetAnswerPage({ worksheet }: { worksheet: WorksheetData }) {
+function WorksheetAnswerPage({ worksheet, pageNumber }: { worksheet: WorksheetData; pageNumber: number }) {
   return (
     <div className="worksheet-page answer-page">
+      {/* Page Header */}
+      <div className="page-top-header">
+        <span className="page-website">www.kidsknowledgenest.com</span>
+        <span className="page-info">{worksheet.practiceSetId} | Page {pageNumber}</span>
+      </div>
+      
+      {/* Watermark */}
       <div className="watermark">www.kidsknowledgenest.com</div>
       
       <div className="page-border">
@@ -531,6 +563,12 @@ function WorksheetAnswerPage({ worksheet }: { worksheet: WorksheetData }) {
           <p className="footer-text">© Kids Knowledge Nest | www.kidsknowledgenest.com</p>
           <p className="footer-note">This worksheet is computer-generated. For educational purposes only.</p>
         </div>
+      </div>
+      
+      {/* Page Footer */}
+      <div className="page-bottom-footer">
+        <span className="page-website">© Kids Knowledge Nest</span>
+        <span className="page-info">Page {pageNumber}</span>
       </div>
     </div>
   );

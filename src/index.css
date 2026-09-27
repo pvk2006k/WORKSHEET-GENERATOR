@@ -49,12 +49,15 @@ body {
 /* Worksheet Page */
 .worksheet-page {
   width: 210mm;
-  min-height: 297mm;
+  height: 297mm;
   background: linear-gradient(135deg, #fefefe 0%, #f8f9ff 100%);
   position: relative;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   padding: 15mm;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Watermark */
@@ -76,7 +79,7 @@ body {
 .page-border {
   position: relative;
   width: 100%;
-  height: 100%;
+  flex: 1;
   border: 4px solid transparent;
   border-radius: 16px;
   padding: 20px;
@@ -84,6 +87,7 @@ body {
   background: 
     linear-gradient(white, white) padding-box,
     linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff) border-box;
+  overflow: hidden;
 }
 
 .page-border::before {
@@ -910,6 +914,43 @@ body {
   margin-top: 5px;
 }
 
+/* Page Header */
+.page-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 15px;
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, #f3e8ff 0%, #e9d5ff 100%);
+  border-radius: 8px;
+  border: 1px solid #d8b4fe;
+}
+
+.page-website {
+  font-size: 11px;
+  color: #7c3aed;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.page-info {
+  font-size: 11px;
+  color: #6b21a8;
+  font-weight: 600;
+}
+
+/* Page Footer */
+.page-bottom-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 15px;
+  margin-top: 10px;
+  background: linear-gradient(90deg, #f3e8ff 0%, #e9d5ff 100%);
+  border-radius: 8px;
+  border: 1px solid #d8b4fe;
+}
+
 /* Print Styles */
 @media print {
   * {
@@ -941,13 +982,16 @@ body {
   }
 
   .worksheet-page {
-    width: 100%;
-    min-height: 100vh;
+    width: 210mm;
+    min-height: 297mm;
+    max-height: 297mm;
     box-shadow: none;
     page-break-after: always;
+    page-break-inside: avoid;
     margin: 0;
-    padding: 8mm;
+    padding: 10mm;
     border-radius: 0;
+    overflow: hidden;
   }
 
   .worksheet-page:last-child {
@@ -956,6 +1000,19 @@ body {
 
   .page-border {
     border-width: 2px;
+    page-break-inside: avoid;
+  }
+
+  .question-block {
+    page-break-inside: avoid;
+  }
+  
+  .answer-block {
+    page-break-inside: avoid;
+  }
+
+  .question-section {
+    page-break-inside: avoid;
   }
 
   .question-block:hover {
