@@ -120,17 +120,6 @@ function WorksheetCoverPage({ worksheet, studentName }: { worksheet: WorksheetDa
         <div className="corner-decoration bottom-left"></div>
         <div className="corner-decoration bottom-right"></div>
         
-        {/* Decorative top pattern */}
-        <div className="page-top-decoration">
-          <svg viewBox="0 0 800 40" className="w-full h-8 opacity-20">
-            <path d="M0,20 Q100,0 200,20 Q300,40 400,20 Q500,0 600,20 Q700,40 800,20" fill="none" stroke="#7c3aed" strokeWidth="2"/>
-            <circle cx="100" cy="10" r="3" fill="#7c3aed"/>
-            <circle cx="300" cy="30" r="3" fill="#4f46e5"/>
-            <circle cx="500" cy="10" r="3" fill="#7c3aed"/>
-            <circle cx="700" cy="30" r="3" fill="#4f46e5"/>
-          </svg>
-        </div>
-        
         {/* Header Section */}
         <div className="worksheet-header">
           <div className="header-logo">
@@ -152,7 +141,7 @@ function WorksheetCoverPage({ worksheet, studentName }: { worksheet: WorksheetDa
           <div className="header-info-grid">
             <div className="info-item">
               <span className="info-label">Student Name</span>
-              <span className="info-value">{studentName || '________________'}</span>
+              <span className="info-value-blank">________________________</span>
             </div>
             <div className="info-item">
               <span className="info-label">Class</span>
@@ -168,7 +157,11 @@ function WorksheetCoverPage({ worksheet, studentName }: { worksheet: WorksheetDa
             </div>
             <div className="info-item">
               <span className="info-label">Total Marks</span>
-              <span className="info-value">{worksheet.totalMarks}</span>
+              <span className="info-value-blank">________</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Date</span>
+              <span className="info-value-blank">____________</span>
             </div>
             <div className="info-item">
               <span className="info-label">Time Allowed</span>
@@ -177,10 +170,6 @@ function WorksheetCoverPage({ worksheet, studentName }: { worksheet: WorksheetDa
             <div className="info-item">
               <span className="info-label">No. of Questions</span>
               <span className="info-value">{worksheet.questions.length}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Date</span>
-              <span className="info-value">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
             </div>
           </div>
         </div>
@@ -201,19 +190,21 @@ function WorksheetCoverPage({ worksheet, studentName }: { worksheet: WorksheetDa
             ✏️ QUESTIONS BEGIN BELOW ✏️
           </div>
         </div>
-        
-        {/* Bottom decoration */}
-        <div className="page-bottom-decoration">
-          <svg viewBox="0 0 800 30" className="w-full h-6 opacity-15">
-            <path d="M0,15 Q200,0 400,15 Q600,30 800,15" fill="none" stroke="#7c3aed" strokeWidth="1.5"/>
-          </svg>
-        </div>
       </div>
     </div>
   );
 }
 
 function WorksheetQuestionsPage({ worksheet }: { worksheet: WorksheetData }) {
+  // Group questions by type
+  const trueFalseQuestions = worksheet.questions.filter(q => q.type === 'true-false');
+  const mcqQuestions = worksheet.questions.filter(q => q.type === 'multiple-choice');
+  const oneLinerQuestions = worksheet.questions.filter(q => q.type === 'one-liner');
+  const matchingQuestions = worksheet.questions.filter(q => q.type === 'match');
+  const fillBlanksQuestions = worksheet.questions.filter(q => q.type === 'fill-in-blank');
+
+  let globalQuestionNumber = 1;
+
   return (
     <div className="worksheet-page">
       <div className="watermark">www.kidsknowledgenest.com</div>
@@ -230,60 +221,197 @@ function WorksheetQuestionsPage({ worksheet }: { worksheet: WorksheetData }) {
           <span className="page-header-right">{worksheet.practiceSetId}</span>
         </div>
 
-        {/* Section Divider */}
-        <div className="section-divider">
-          <div className="section-divider-line"></div>
-          <span className="section-divider-text">Practice Questions</span>
-          <div className="section-divider-line"></div>
-        </div>
-
-        {/* Questions */}
+        {/* Questions by Section */}
         <div className="questions-container">
-          {worksheet.questions.map((q, idx) => (
-            <div key={q.id} className="question-block">
-              <div className="question-header">
-                <span className="question-number">Q{idx + 1}.</span>
-                <span className="question-marks">[{q.points} marks]</span>
+          
+          {/* Section A: True/False */}
+          {trueFalseQuestions.length > 0 && (
+            <div className="question-section">
+              <div className="section-header">
+                <span className="section-icon">✅</span>
+                <h3 className="section-title">Section A: True or False</h3>
+                <span className="section-count">({trueFalseQuestions.length} Questions)</span>
               </div>
-              <p className="question-text">{q.question}</p>
-              
-              {/* Display image if available */}
-              {q.imageUrl && (
-                <div className="question-image">
-                  <img 
-                    src={q.imageUrl} 
-                    alt={`Illustration for question ${idx + 1}`}
-                    className="max-w-full h-auto rounded-lg border border-gray-200"
-                    style={{ maxHeight: '200px', objectFit: 'contain' }}
-                  />
-                </div>
-              )}
-              
-              {q.type === 'multiple-choice' && q.options && (
-                <div className="options-grid">
-                  {q.options.map((opt, optIdx) => (
-                    <div key={optIdx} className="option-item">
-                      <span className="option-letter">{String.fromCharCode(97 + optIdx)})</span>
-                      <span className="option-text">{opt}</span>
+              <p className="section-instruction">State whether the following statements are True or False.</p>
+              {trueFalseQuestions.map((q) => {
+                const qNum = globalQuestionNumber++;
+                return (
+                  <div key={q.id} className="question-block">
+                    <div className="question-header">
+                      <span className="question-number">Q{qNum}.</span>
+                      <span className="question-marks">[{q.points} mark{q.points > 1 ? 's' : ''}]</span>
                     </div>
-                  ))}
-                </div>
-              )}
-              
-              <div className="answer-space">
-                {q.type === 'fill-in-blank' && (
-                  <div className="blank-line"></div>
-                )}
-                {q.type === 'short-answer' && (
-                  <>
-                    <div className="blank-line"></div>
-                    <div className="blank-line"></div>
-                    <div className="blank-line"></div>
-                  </>
-                )}
-              </div>
+                    <p className="question-text">{q.question}</p>
+                    <div className="true-false-options">
+                      <div className="tf-option">
+                        <div className="tf-circle"></div>
+                        <span>True</span>
+                      </div>
+                      <div className="tf-option">
+                        <div className="tf-circle"></div>
+                        <span>False</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
+          )}
+
+          {/* Section B: MCQs */}
+          {mcqQuestions.length > 0 && (
+            <div className="question-section">
+              <div className="section-header">
+                <span className="section-icon">🔘</span>
+                <h3 className="section-title">Section B: Multiple Choice Questions</h3>
+                <span className="section-count">({mcqQuestions.length} Questions)</span>
+              </div>
+              <p className="section-instruction">Choose the correct option from the given choices.</p>
+              {mcqQuestions.map((q) => {
+                const qNum = globalQuestionNumber++;
+                return (
+                  <div key={q.id} className="question-block">
+                    <div className="question-header">
+                      <span className="question-number">Q{qNum}.</span>
+                      <span className="question-marks">[{q.points} mark{q.points > 1 ? 's' : ''}]</span>
+                    </div>
+                    <p className="question-text">{q.question}</p>
+                    {q.imageUrl && (
+                      <div className="question-image">
+                        <img src={q.imageUrl} alt={`Illustration for question ${qNum}`} className="max-w-full h-auto rounded-lg border border-gray-200" style={{ maxHeight: '180px', objectFit: 'contain' }} />
+                      </div>
+                    )}
+                    {q.options && (
+                      <div className="options-grid">
+                        {q.options.map((opt, optIdx) => (
+                          <div key={optIdx} className="option-item">
+                            <span className="option-letter">{String.fromCharCode(97 + optIdx)})</span>
+                            <span className="option-text">{opt}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Section C: Fill in the Blanks */}
+          {fillBlanksQuestions.length > 0 && (
+            <div className="question-section">
+              <div className="section-header">
+                <span className="section-icon">✍️</span>
+                <h3 className="section-title">Section C: Fill in the Blanks</h3>
+                <span className="section-count">({fillBlanksQuestions.length} Questions)</span>
+              </div>
+              <p className="section-instruction">Fill in the blanks with the correct answer.</p>
+              {fillBlanksQuestions.map((q) => {
+                const qNum = globalQuestionNumber++;
+                return (
+                  <div key={q.id} className="question-block">
+                    <div className="question-header">
+                      <span className="question-number">Q{qNum}.</span>
+                      <span className="question-marks">[{q.points} mark{q.points > 1 ? 's' : ''}]</span>
+                    </div>
+                    <p className="question-text">{q.question}</p>
+                    <div className="answer-space">
+                      <div className="blank-line"></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Section D: One Liner / Short Answer */}
+          {oneLinerQuestions.length > 0 && (
+            <div className="question-section">
+              <div className="section-header">
+                <span className="section-icon">💬</span>
+                <h3 className="section-title">Section D: One Word / One Line Answer</h3>
+                <span className="section-count">({oneLinerQuestions.length} Questions)</span>
+              </div>
+              <p className="section-instruction">Answer the following questions in one word or one line.</p>
+              {oneLinerQuestions.map((q) => {
+                const qNum = globalQuestionNumber++;
+                return (
+                  <div key={q.id} className="question-block">
+                    <div className="question-header">
+                      <span className="question-number">Q{qNum}.</span>
+                      <span className="question-marks">[{q.points} mark{q.points > 1 ? 's' : ''}]</span>
+                    </div>
+                    <p className="question-text">{q.question}</p>
+                    {q.imageUrl && (
+                      <div className="question-image">
+                        <img src={q.imageUrl} alt={`Illustration for question ${qNum}`} className="max-w-full h-auto rounded-lg border border-gray-200" style={{ maxHeight: '180px', objectFit: 'contain' }} />
+                      </div>
+                    )}
+                    <div className="answer-space">
+                      <div className="blank-line"></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Section E: Matching */}
+          {matchingQuestions.length > 0 && (
+            <div className="question-section">
+              <div className="section-header">
+                <span className="section-icon">🔗</span>
+                <h3 className="section-title">Section E: Match the Following</h3>
+                <span className="section-count">({matchingQuestions.length} Questions)</span>
+              </div>
+              <p className="section-instruction">Match the items in Column A with the correct items in Column B.</p>
+              {matchingQuestions.map((q) => {
+                const qNum = globalQuestionNumber++;
+                return (
+                  <div key={q.id} className="question-block">
+                    <div className="question-header">
+                      <span className="question-number">Q{qNum}.</span>
+                      <span className="question-marks">[{q.points} mark{q.points > 1 ? 's' : ''}]</span>
+                    </div>
+                    {q.question && <p className="question-text">{q.question}</p>}
+                    <div className="matching-table">
+                      <div className="matching-columns">
+                        <div className="matching-column">
+                          <div className="column-header">Column A</div>
+                          {q.matchColumnA?.map((item, idx) => (
+                            <div key={idx} className="matching-item">
+                              <span className="matching-label">{idx + 1}.</span>
+                              <span className="matching-text">{item}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="matching-column">
+                          <div className="column-header">Column B</div>
+                          {q.matchColumnB?.map((item, idx) => (
+                            <div key={idx} className="matching-item">
+                              <span className="matching-label">{String.fromCharCode(97 + idx)})</span>
+                              <span className="matching-text">{item}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="matching-answers">
+                        <p className="answers-label">Answers:</p>
+                        <div className="answers-grid">
+                          {q.matchColumnA?.map((_, idx) => (
+                            <div key={idx} className="answer-slot">
+                              <span>{idx + 1} → </span>
+                              <div className="answer-blank"></div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Page Footer */}
@@ -320,7 +448,8 @@ function WorksheetAnswerPage({ worksheet }: { worksheet: WorksheetData }) {
             <div key={q.id} className="answer-block">
               <div className="answer-header">
                 <span className="answer-number">Q{idx + 1}.</span>
-                <span className="answer-correct">✓ Correct Answer: <strong>{q.correctAnswer}</strong></span>
+                <span className="answer-type-badge">{q.type.replace('-', ' ').toUpperCase()}</span>
+                <span className="answer-correct">✓ Answer: <strong>{q.correctAnswer}</strong></span>
               </div>
               <div className="answer-explanation">
                 <span className="explanation-label">💡 Explanation:</span>

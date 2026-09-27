@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { WorksheetData } from './types';
+import { WorksheetData, QuestionDistribution } from './types';
 import { generateWorksheet } from './utils/aiGenerator';
 import { generateWorksheetWithAI, isAPIConfigured as isOpenAIConfigured } from './utils/openAIService';
 import { generateWorksheetWithGroq, isGroqConfigured } from './utils/groqService';
@@ -17,7 +17,7 @@ function App() {
   const [isAPIReady, setIsAPIReady] = useState(false);
   const worksheetRef = useRef<HTMLDivElement>(null);
 
-  const handleGenerate = async (className: string, topic: string, numQuestions: number, name: string, practiceSetId: string) => {
+  const handleGenerate = async (className: string, topic: string, numQuestions: number, name: string, practiceSetId: string, distribution: QuestionDistribution) => {
     setIsGenerating(true);
     setError(null);
     setStudentName(name);
@@ -28,7 +28,7 @@ function App() {
       // Check if Puter.js is available (no API key required)
       if (window.puter) {
         // Use Puter.js - serverless AI, no API key needed!
-        data = await generateWorksheetWithPuter(className, topic, numQuestions, practiceSetId);
+        data = await generateWorksheetWithPuter(className, topic, numQuestions, practiceSetId, distribution);
       } else if (isGroqConfigured()) {
         // Use Groq API
         data = await generateWorksheetWithGroq(className, topic, numQuestions);

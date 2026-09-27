@@ -290,6 +290,15 @@ body {
   margin-top: 3px;
 }
 
+/* Blank info value for fields student should fill */
+.info-value-blank {
+  font-size: 15px;
+  font-weight: 400;
+  color: #9ca3af;
+  margin-top: 3px;
+  letter-spacing: 2px;
+}
+
 /* Instructions */
 .instructions-section {
   margin: 25px 0;
@@ -416,6 +425,183 @@ body {
 /* Questions Container */
 .questions-container {
   padding: 0 5px;
+}
+
+/* Question Section */
+.question-section {
+  margin-bottom: 25px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  border: 2px solid #c4b5fd;
+}
+
+.section-icon {
+  font-size: 20px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #5b21b6;
+  margin: 0;
+  flex: 1;
+}
+
+.section-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7c3aed;
+  background: white;
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid #c4b5fd;
+}
+
+.section-instruction {
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+  margin-bottom: 15px;
+  padding-left: 5px;
+}
+
+/* True/False Options */
+.true-false-options {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+  padding: 10px 15px;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px dashed #d1d5db;
+}
+
+.tf-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.tf-circle {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #9ca3af;
+  border-radius: 50%;
+  background: white;
+}
+
+/* Matching Table */
+.matching-table {
+  margin-top: 12px;
+}
+
+.matching-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.matching-column {
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 10px;
+  border: 2px solid #e5e7eb;
+}
+
+.column-header {
+  font-size: 13px;
+  font-weight: 800;
+  color: #4f46e5;
+  text-align: center;
+  padding: 6px;
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.matching-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  margin-bottom: 5px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+}
+
+.matching-label {
+  font-weight: 700;
+  color: #4f46e5;
+  min-width: 20px;
+}
+
+.matching-text {
+  color: #374151;
+  font-weight: 500;
+}
+
+.matching-answers {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-radius: 10px;
+  padding: 12px;
+  border: 2px solid #fbbf24;
+}
+
+.answers-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 8px;
+}
+
+.answers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.answer-slot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #78350f;
+}
+
+.answer-blank {
+  flex: 1;
+  height: 24px;
+  border-bottom: 2px dashed #92400e;
+  min-width: 40px;
+}
+
+/* Answer Type Badge */
+.answer-type-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  padding: 3px 8px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .question-block {

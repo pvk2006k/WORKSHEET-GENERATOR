@@ -1,12 +1,22 @@
 export interface Question {
   id: number;
-  type: 'multiple-choice' | 'fill-in-blank' | 'true-false' | 'match' | 'short-answer';
+  type: 'multiple-choice' | 'fill-in-blank' | 'true-false' | 'match' | 'one-liner';
   question: string;
   imageUrl?: string;
   options?: string[];
+  matchColumnA?: string[];
+  matchColumnB?: string[];
   correctAnswer: string;
   explanation: string;
   points: number;
+}
+
+export interface QuestionDistribution {
+  trueFalse: number;
+  mcq: number;
+  oneLiner: number;
+  matching: number;
+  fillBlanks: number;
 }
 
 export interface WorksheetData {
@@ -27,4 +37,5 @@ export interface WorksheetForm {
   studentName: string;
   numberOfQuestions: number;
   practiceSetId: string;
+  distribution: QuestionDistribution;
 }

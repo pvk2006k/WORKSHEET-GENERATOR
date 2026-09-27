@@ -1,4 +1,4 @@
-import { WorksheetData, Question } from '../types';
+import { WorksheetData, Question, QuestionDistribution } from '../types';
 
 // Puter.js is loaded globally via script tag in index.html
 declare global {
@@ -11,7 +11,8 @@ export async function generateWorksheetWithPuter(
   className: string,
   topic: string,
   numQuestions: number,
-  practiceSetId?: string
+  practiceSetId?: string,
+  distribution?: QuestionDistribution
 ): Promise<WorksheetData> {
   // Extract class number for pedagogy level
   const classMatch = className.match(/\d+/);
@@ -40,6 +41,17 @@ export async function generateWorksheetWithPuter(
     difficultyNotes = 'Emphasize analysis, evaluation, and synthesis. Questions should challenge higher-order thinking.';
   }
 
+  // Build distribution requirements
+  const distributionRequirements = distribution ? `
+EXACT QUESTION TYPE DISTRIBUTION (MUST FOLLOW EXACTLY):
+- True/False questions: ${distribution.trueFalse}
+- Multiple Choice Questions (MCQs): ${distribution.mcq}
+- Fill in the Blanks: ${distribution.fillBlanks}
+- One Liner / Short Answer: ${distribution.oneLiner}
+- Matching questions: ${distribution.matching}
+Total: ${distribution.trueFalse + distribution.mcq + distribution.fillBlanks + distribution.oneLiner + distribution.matching} questions
+` : '';
+
   const prompt = `Create an educational worksheet for ${className} students (pedagogy level: ${pedagogyLevel}) on the topic "${topic}".
 
 IMPORTANT PEDAGOGICAL GUIDELINES:
@@ -48,13 +60,24 @@ IMPORTANT PEDAGOGICAL GUIDELINES:
 - Ensure cognitive load is appropriate for the age group
 - Use scaffolding: start with easier questions, progress to more challenging ones
 - Make questions engaging and relevant to students' lives
+${distributionRequirements}
 
 Generate exactly ${numQuestions} questions that are:
 - Age-appropriate for ${className} (${pedagogyLevel})
-- Include a mix of question types (multiple choice, fill-in-the-blank, true/false)
 - Educational, engaging, and fun for kids
 - Include clear, kid-friendly explanations for each answer
 - For 2-3 questions, suggest an image prompt that would help illustrate the question (make it colorful and appealing for children)
+
+QUESTION TYPES:
+1. "true-false": Statement that students mark as True or False
+2. "multiple-choice": Question with exactly 4 options (a, b, c, d)
+3. "fill-in-blank": Sentence with blank(s) to fill in
+4. "one-liner": Question requiring one word or one line answer
+5. "match": Matching question with two columns (Column A and Column B) with 4-5 items each
+
+For matching questions, include:
+- "matchColumnA": array of items for Column A
+- "matchColumnB": array of items for Column B (shuffled, not in matching order)
 
 Format your response as a JSON object with this structure:
 {
@@ -64,12 +87,14 @@ Format your response as a JSON object with this structure:
   "questions": [
     {
       "id": 1,
-      "type": "multiple-choice" | "fill-in-blank" | "true-false",
+      "type": "true-false" | "multiple-choice" | "fill-in-blank" | "one-liner" | "match",
       "question": "Question text (age-appropriate language)",
-      "options": ["option a", "option b", "option c", "option d"] (only for multiple-choice),
+      "options": ["option a", "option b", "option c", "option d"] (ONLY for multiple-choice),
+      "matchColumnA": ["item 1", "item 2", "item 3", "item 4"] (ONLY for match type),
+      "matchColumnB": ["item a", "item b", "item c", "item d"] (ONLY for match type, shuffled),
       "correctAnswer": "Correct answer",
       "explanation": "Kid-friendly explanation of why this is correct",
-      "points": 2,
+      "points": 1,
       "imagePrompt": "Colorful, fun, educational illustration description suitable for children" (optional, for 2-3 questions only)
     }
   ]
@@ -109,9 +134,11 @@ Make sure all questions are pedagogically appropriate for ${className} level and
           type: q.type || 'fill-in-blank',
           question: q.question,
           options: q.options,
+          matchColumnA: q.matchColumnA,
+          matchColumnB: q.matchColumnB,
           correctAnswer: q.correctAnswer,
           explanation: q.explanation,
-          points: q.points || 2
+          points: q.points || 1
         };
 
         // Generate image if prompt is provided
