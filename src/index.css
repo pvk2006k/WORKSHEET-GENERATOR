@@ -5,12 +5,41 @@ body {
   font-family: 'Nunito', 'Quicksand', system-ui, sans-serif;
 }
 
-/* Worksheet Container */
-.worksheet-container {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  align-items: center;
+/* Worksheet Container - CONTINUOUS FLOW */
+.worksheet-continuous {
+  width: 210mm;
+  background: linear-gradient(135deg, #fefefe 0%, #f8f9ff 100%);
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 20mm 15mm;
+  margin: 0 auto;
+}
+
+/* Decorative patterns for worksheet */
+.worksheet-continuous::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(79, 70, 229, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Top decorative bar */
+.worksheet-continuous::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #7c3aed, #4f46e5, #6366f1, #7c3aed);
+  z-index: 3;
 }
 
 /* Decorative patterns for worksheet pages */
@@ -46,17 +75,7 @@ body {
   background: linear-gradient(90deg, #059669, #10b981, #34d399, #059669);
 }
 
-/* Worksheet Page */
-.worksheet-page {
-  width: 210mm;
-  min-height: 297mm;
-  background: linear-gradient(135deg, #fefefe 0%, #f8f9ff 100%);
-  position: relative;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  overflow: visible;
-  padding: 15mm;
-  margin-bottom: 20px;
-}
+/* Worksheet Page - REMOVED (now using continuous flow) */
 
 /* Watermark */
 .watermark {
@@ -73,78 +92,9 @@ body {
   letter-spacing: 2px;
 }
 
-/* Page Border */
-.page-border {
-  position: relative;
-  width: 100%;
-  border: 4px solid transparent;
-  border-radius: 16px;
-  padding: 20px;
-  z-index: 1;
-  background: 
-    linear-gradient(white, white) padding-box,
-    linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff) border-box;
-}
+/* Page Border - REMOVED (now using continuous flow) */
 
-.page-border::before {
-  content: '';
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  right: 6px;
-  bottom: 6px;
-  border: 2px dashed rgba(124, 58, 237, 0.2);
-  border-radius: 12px;
-  pointer-events: none;
-}
-
-/* Corner Decorations */
-.corner-decoration {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  z-index: 2;
-  font-size: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.corner-decoration.top-left {
-  top: 8px;
-  left: 8px;
-}
-
-.corner-decoration.top-left::after {
-  content: '⭐';
-}
-
-.corner-decoration.top-right {
-  top: 8px;
-  right: 8px;
-}
-
-.corner-decoration.top-right::after {
-  content: '🌈';
-}
-
-.corner-decoration.bottom-left {
-  bottom: 8px;
-  left: 8px;
-}
-
-.corner-decoration.bottom-left::after {
-  content: '🎨';
-}
-
-.corner-decoration.bottom-right {
-  bottom: 8px;
-  right: 8px;
-}
-
-.corner-decoration.bottom-right::after {
-  content: '✨';
-}
+/* Corner Decorations - REMOVED (now using continuous flow) */
 
 /* Page Top Decoration */
 .page-top-decoration {
@@ -947,7 +897,7 @@ body {
   border: 1px solid #d8b4fe;
 }
 
-/* Print Styles */
+/* Print Styles - CONTINUOUS FLOW */
 @media print {
   * {
     -webkit-print-color-adjust: exact !important;
@@ -973,30 +923,14 @@ body {
     max-width: 100% !important;
   }
 
-  .worksheet-container {
-    gap: 0;
-    margin: 0;
-  }
-
-  .worksheet-page {
-    width: 210mm;
-    min-height: auto;
+  .worksheet-continuous {
+    width: 100%;
     box-shadow: none;
-    page-break-after: always;
+    padding: 0;
     margin: 0;
-    padding: 10mm;
-    border-radius: 0;
-    overflow: visible;
   }
 
-  .worksheet-page:last-child {
-    page-break-after: auto;
-  }
-
-  .page-border {
-    border-width: 2px;
-  }
-
+  /* Prevent cutting of questions and answers */
   .question-block {
     page-break-inside: avoid;
     break-inside: avoid;
@@ -1012,14 +946,17 @@ body {
     break-inside: avoid;
   }
 
+  /* Remove hover effects in print */
   .question-block:hover {
     border-color: #f0f0f0;
     background: #fafafa;
     box-shadow: none;
+    transform: none;
   }
   
   .answer-block:hover {
     box-shadow: none;
+    transform: none;
   }
 }
 

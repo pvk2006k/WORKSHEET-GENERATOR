@@ -32,8 +32,7 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
     const totalWidth = canvas.width;
     const totalHeight = canvas.height;
     
-    // Calculate how many A4 pages we need
-    // A4 ratio is 210:297, so height should be (297/210) * width
+    // Calculate A4 page height in pixels
     const a4PageHeight = (297 / 210) * totalWidth;
     const numPages = Math.ceil(totalHeight / a4PageHeight);
     
@@ -56,9 +55,26 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
         // Draw the slice from the original canvas
         ctx.drawImage(
           canvas,
-          0, startY, totalWidth, sliceHeight, // source
-          0, 0, totalWidth, sliceHeight // destination
+          0, startY, totalWidth, sliceHeight,
+          0, 0, totalWidth, sliceHeight
         );
+        
+        // Add header to this page
+        ctx.fillStyle = '#f3e8ff';
+        ctx.fillRect(0, 0, totalWidth, 40);
+        ctx.fillStyle = '#7c3aed';
+        ctx.font = 'bold 22px Arial';
+        ctx.fillText('www.kidsknowledgenest.com', 30, 28);
+        ctx.font = 'bold 20px Arial';
+        ctx.fillText(`${worksheet.practiceSetId} | Page ${i + 1}`, totalWidth - 400, 28);
+        
+        // Add footer to this page
+        ctx.fillStyle = '#f3e8ff';
+        ctx.fillRect(0, a4PageHeight - 40, totalWidth, 40);
+        ctx.fillStyle = '#7c3aed';
+        ctx.font = 'bold 20px Arial';
+        ctx.fillText('© Kids Knowledge Nest', 30, a4PageHeight - 15);
+        ctx.fillText(`Page ${i + 1}`, totalWidth - 200, a4PageHeight - 15);
         
         // Convert to image data
         const pageImgData = pageCanvas.toDataURL('image/png');
@@ -117,6 +133,23 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
           0, 0, totalWidth, sliceHeight
         );
         
+        // Add header
+        ctx.fillStyle = '#f3e8ff';
+        ctx.fillRect(0, 0, totalWidth, 40);
+        ctx.fillStyle = '#7c3aed';
+        ctx.font = 'bold 22px Arial';
+        ctx.fillText('www.kidsknowledgenest.com', 30, 28);
+        ctx.font = 'bold 20px Arial';
+        ctx.fillText(`${worksheet.practiceSetId} | Page ${i + 1}`, totalWidth - 400, 28);
+        
+        // Add footer
+        ctx.fillStyle = '#f3e8ff';
+        ctx.fillRect(0, a4PageHeight - 40, totalWidth, 40);
+        ctx.fillStyle = '#7c3aed';
+        ctx.font = 'bold 20px Arial';
+        ctx.fillText('© Kids Knowledge Nest', 30, a4PageHeight - 15);
+        ctx.fillText(`Page ${i + 1}`, totalWidth - 200, a4PageHeight - 15);
+        
         // Download this page
         const link = document.createElement('a');
         link.download = `${worksheet.practiceSetId}_page_${i + 1}.png`;
@@ -128,6 +161,15 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
       }
     }
   };
+
+  // Group questions by type
+  const trueFalseQuestions = worksheet.questions.filter(q => q.type === 'true-false');
+  const mcqQuestions = worksheet.questions.filter(q => q.type === 'multiple-choice');
+  const oneLinerQuestions = worksheet.questions.filter(q => q.type === 'one-liner');
+  const matchingQuestions = worksheet.questions.filter(q => q.type === 'match');
+  const fillBlanksQuestions = worksheet.questions.filter(q => q.type === 'fill-in-blank');
+
+  let globalQuestionNumber = 1;
 
   return (
     <div>
@@ -158,41 +200,12 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
         </button>
       </div>
 
-      {/* Worksheet Content */}
-      <div ref={worksheetRef} className="worksheet-container">
-        {/* Page 1 - Cover/Header Page */}
-        <WorksheetCoverPage worksheet={worksheet} studentName={studentName} pageNumber={1} />
+      {/* Worksheet Content - ONE CONTINUOUS FLOW */}
+      <div ref={worksheetRef} className="worksheet-continuous">
+        {/* Watermark */}
+        <div className="watermark">www.kidsknowledgenest.com</div>
         
-        {/* Question Pages */}
-        <WorksheetQuestionsPage worksheet={worksheet} pageNumber={2} />
-        
-        {/* Answer Key Page */}
-        <WorksheetAnswerPage worksheet={worksheet} pageNumber={3} />
-      </div>
-    </div>
-  );
-}
-
-function WorksheetCoverPage({ worksheet, studentName, pageNumber }: { worksheet: WorksheetData; studentName: string; pageNumber: number }) {
-  return (
-    <div className="worksheet-page">
-      {/* Page Header */}
-      <div className="page-top-header">
-        <span className="page-website">www.kidsknowledgenest.com</span>
-        <span className="page-info">{worksheet.practiceSetId} | Page {pageNumber}</span>
-      </div>
-      
-      {/* Watermark */}
-      <div className="watermark">www.kidsknowledgenest.com</div>
-      
-      {/* Decorative Border */}
-      <div className="page-border">
-        <div className="corner-decoration top-left"></div>
-        <div className="corner-decoration top-right"></div>
-        <div className="corner-decoration bottom-left"></div>
-        <div className="corner-decoration bottom-right"></div>
-        
-        {/* Header Section */}
+        {/* COVER SECTION */}
         <div className="worksheet-header">
           <div className="header-logo">
             <div className="logo-icon">📚</div>
@@ -204,7 +217,6 @@ function WorksheetCoverPage({ worksheet, studentName, pageNumber }: { worksheet:
           
           <div className="header-divider"></div>
           
-          {/* Worksheet Title Banner */}
           <div className="worksheet-title-banner">
             <h2 className="worksheet-title-text">{worksheet.topic}</h2>
             <p className="worksheet-title-sub">Practice Worksheet</p>
@@ -262,51 +274,8 @@ function WorksheetCoverPage({ worksheet, studentName, pageNumber }: { worksheet:
             ✏️ QUESTIONS BEGIN BELOW ✏️
           </div>
         </div>
-      </div>
-      
-      {/* Page Footer */}
-      <div className="page-bottom-footer">
-        <span className="page-website">© Kids Knowledge Nest</span>
-        <span className="page-info">Page {pageNumber}</span>
-      </div>
-    </div>
-  );
-}
 
-function WorksheetQuestionsPage({ worksheet, pageNumber }: { worksheet: WorksheetData; pageNumber: number }) {
-  // Group questions by type
-  const trueFalseQuestions = worksheet.questions.filter(q => q.type === 'true-false');
-  const mcqQuestions = worksheet.questions.filter(q => q.type === 'multiple-choice');
-  const oneLinerQuestions = worksheet.questions.filter(q => q.type === 'one-liner');
-  const matchingQuestions = worksheet.questions.filter(q => q.type === 'match');
-  const fillBlanksQuestions = worksheet.questions.filter(q => q.type === 'fill-in-blank');
-
-  let globalQuestionNumber = 1;
-
-  return (
-    <div className="worksheet-page">
-      {/* Page Header */}
-      <div className="page-top-header">
-        <span className="page-website">www.kidsknowledgenest.com</span>
-        <span className="page-info">{worksheet.practiceSetId} | Page {pageNumber}</span>
-      </div>
-      
-      {/* Watermark */}
-      <div className="watermark">www.kidsknowledgenest.com</div>
-      
-      <div className="page-border">
-        <div className="corner-decoration top-left"></div>
-        <div className="corner-decoration top-right"></div>
-        <div className="corner-decoration bottom-left"></div>
-        <div className="corner-decoration bottom-right"></div>
-        
-        {/* Page Header */}
-        <div className="page-header">
-          <span className="page-header-left">{worksheet.topic} - Practice Set</span>
-          <span className="page-header-right">{worksheet.practiceSetId}</span>
-        </div>
-
-        {/* Questions by Section */}
+        {/* QUESTIONS - CONTINUOUS FLOW */}
         <div className="questions-container">
           
           {/* Section A: True/False */}
@@ -409,7 +378,7 @@ function WorksheetQuestionsPage({ worksheet, pageNumber }: { worksheet: Workshee
             </div>
           )}
 
-          {/* Section D: One Liner / Short Answer */}
+          {/* Section D: One Liner */}
           {oneLinerQuestions.length > 0 && (
             <div className="question-section">
               <div className="section-header">
@@ -499,41 +468,13 @@ function WorksheetQuestionsPage({ worksheet, pageNumber }: { worksheet: Workshee
           )}
         </div>
 
-        {/* Page Footer */}
+        {/* Page Footer for Questions */}
         <div className="page-footer">
           <span>*** End of Questions ***</span>
           <span>Good Luck! 🍀</span>
         </div>
-      </div>
-      
-      {/* Page Footer */}
-      <div className="page-bottom-footer">
-        <span className="page-website">© Kids Knowledge Nest</span>
-        <span className="page-info">Page {pageNumber}</span>
-      </div>
-    </div>
-  );
-}
 
-function WorksheetAnswerPage({ worksheet, pageNumber }: { worksheet: WorksheetData; pageNumber: number }) {
-  return (
-    <div className="worksheet-page answer-page">
-      {/* Page Header */}
-      <div className="page-top-header">
-        <span className="page-website">www.kidsknowledgenest.com</span>
-        <span className="page-info">{worksheet.practiceSetId} | Page {pageNumber}</span>
-      </div>
-      
-      {/* Watermark */}
-      <div className="watermark">www.kidsknowledgenest.com</div>
-      
-      <div className="page-border">
-        <div className="corner-decoration top-left"></div>
-        <div className="corner-decoration top-right"></div>
-        <div className="corner-decoration bottom-left"></div>
-        <div className="corner-decoration bottom-right"></div>
-        
-        {/* Answer Page Header */}
+        {/* ANSWER KEY SECTION */}
         <div className="answer-page-header">
           <div className="answer-badge">📝 ANSWER KEY & EXPLANATIONS</div>
           <p className="answer-subtitle">{worksheet.title}</p>
@@ -563,12 +504,6 @@ function WorksheetAnswerPage({ worksheet, pageNumber }: { worksheet: WorksheetDa
           <p className="footer-text">© Kids Knowledge Nest | www.kidsknowledgenest.com</p>
           <p className="footer-note">This worksheet is computer-generated. For educational purposes only.</p>
         </div>
-      </div>
-      
-      {/* Page Footer */}
-      <div className="page-bottom-footer">
-        <span className="page-website">© Kids Knowledge Nest</span>
-        <span className="page-info">Page {pageNumber}</span>
       </div>
     </div>
   );
