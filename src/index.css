@@ -49,15 +49,13 @@ body {
 /* Worksheet Page */
 .worksheet-page {
   width: 210mm;
-  height: 297mm;
+  min-height: 297mm;
   background: linear-gradient(135deg, #fefefe 0%, #f8f9ff 100%);
   position: relative;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow: visible;
   padding: 15mm;
   margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
 }
 
 /* Watermark */
@@ -79,7 +77,6 @@ body {
 .page-border {
   position: relative;
   width: 100%;
-  flex: 1;
   border: 4px solid transparent;
   border-radius: 16px;
   padding: 20px;
@@ -87,7 +84,6 @@ body {
   background: 
     linear-gradient(white, white) padding-box,
     linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff) border-box;
-  overflow: hidden;
 }
 
 .page-border::before {
@@ -979,19 +975,18 @@ body {
 
   .worksheet-container {
     gap: 0;
+    margin: 0;
   }
 
   .worksheet-page {
     width: 210mm;
-    min-height: 297mm;
-    max-height: 297mm;
+    min-height: auto;
     box-shadow: none;
     page-break-after: always;
-    page-break-inside: avoid;
     margin: 0;
     padding: 10mm;
     border-radius: 0;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .worksheet-page:last-child {
@@ -1000,19 +995,21 @@ body {
 
   .page-border {
     border-width: 2px;
-    page-break-inside: avoid;
   }
 
   .question-block {
     page-break-inside: avoid;
+    break-inside: avoid;
   }
   
   .answer-block {
     page-break-inside: avoid;
+    break-inside: avoid;
   }
 
   .question-section {
     page-break-inside: avoid;
+    break-inside: avoid;
   }
 
   .question-block:hover {
