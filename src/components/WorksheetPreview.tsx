@@ -22,22 +22,58 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     
+    // Process each page individually with correct sizing
     for (let i = 0; i < pages.length; i++) {
-      const canvas = await html2canvas(pages[i] as HTMLElement, {
+      const pageElement = pages[i] as HTMLElement;
+      
+      // Capture the page at high quality
+      const canvas = await html2canvas(pageElement, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
+        width: pageElement.offsetWidth,
+        height: pageElement.offsetHeight,
+        windowWidth: pageElement.offsetWidth,
+        windowHeight: pageElement.offsetHeight,
       });
       
       const imgData = canvas.toDataURL('image/png');
+      
+      // Calculate dimensions to fit A4 page while maintaining aspect ratio
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
       
-      if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, 'PNG', imgX, 0, imgWidth * ratio, imgHeight * ratio);
+      // A4 aspect ratio is 210:297 (width:height)
+      const a4AspectRatio = pdfWidth / pdfHeight;
+      const imgAspectRatio = imgWidth / imgHeight;
+      
+      let finalWidth: number;
+      let finalHeight: number;
+      let x: number;
+      let y: number;
+      
+      if (imgAspectRatio > a4AspectRatio) {
+        // Image is wider than A4 ratio - fit to width
+        finalWidth = pdfWidth;
+        finalHeight = pdfWidth / imgAspectRatio;
+        x = 0;
+        y = (pdfHeight - finalHeight) / 2;
+      } else {
+        // Image is taller than A4 ratio - fit to height
+        finalHeight = pdfHeight;
+        finalWidth = pdfHeight * imgAspectRatio;
+        x = (pdfWidth - finalWidth) / 2;
+        y = 0;
+      }
+      
+      // Add new page if not the first page
+      if (i > 0) {
+        pdf.addPage();
+      }
+      
+      // Add image to PDF
+      pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
     }
     
     pdf.save(`${worksheet.practiceSetId}.pdf`);
@@ -49,17 +85,26 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
     const pages = worksheetRef.current.querySelectorAll('.worksheet-page');
     
     for (let i = 0; i < pages.length; i++) {
-      const canvas = await html2canvas(pages[i] as HTMLElement, {
+      const pageElement = pages[i] as HTMLElement;
+      
+      const canvas = await html2canvas(pageElement, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
+        width: pageElement.offsetWidth,
+        height: pageElement.offsetHeight,
+        windowWidth: pageElement.offsetWidth,
+        windowHeight: pageElement.offsetHeight,
       });
       
       const link = document.createElement('a');
       link.download = `${worksheet.practiceSetId}_page_${i + 1}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
+      
+      // Small delay between downloads to prevent browser blocking
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
   };
 
