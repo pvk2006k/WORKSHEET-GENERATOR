@@ -30,17 +30,33 @@ A beautiful, AI-powered worksheet generator for creating professional educationa
 
 ## Setup & Usage
 
-### 1. OpenAI API Key (Required for AI Generation)
+### 1. AI API Key (Required for AI Generation)
 
-To use the AI-powered question generation:
+The app supports **two AI providers** - choose whichever you prefer:
 
+#### Option A: Groq (Recommended - Fast & Free)
+1. Get an API key from [Groq Console](https://console.groq.com/keys)
+2. Open the application
+3. Select **Groq** provider in the API Key section
+4. Enter your key (starts with `gsk_...`)
+5. Click "Save Key"
+- Uses **Llama 3.3 70B** model
+- Has a generous free tier
+- Very fast inference
+
+#### Option B: OpenAI (Premium)
 1. Get an API key from [OpenAI Platform](https://platform.openai.com/api-keys)
 2. Open the application
-3. Enter your API key in the "OpenAI API Key" section at the top
-4. Click "Save Key"
-5. Your key is stored locally in your browser (never sent to any server except OpenAI)
+3. Select **OpenAI** provider in the API Key section
+4. Enter your key (starts with `sk-...`)
+5. Click "Save Key"
+- Uses **GPT-4o-mini** model
+- Paid API (requires credits)
+- High quality responses
 
 **Note:** Without an API key, the app will use a local question bank as a fallback.
+
+Your key is stored locally in your browser and never sent to any server except the selected AI provider.
 
 ### 2. Creating a Worksheet
 
@@ -98,7 +114,8 @@ Each generated worksheet includes:
 - **TypeScript** - Type safety
 - **Vite** - Build tool
 - **Tailwind CSS** - Styling
-- **OpenAI API** - AI question generation
+- **Groq API** - AI question generation (Llama 3.3)
+- **OpenAI API** - AI question generation (GPT-4o-mini)
 - **html2canvas** - HTML to image conversion
 - **jsPDF** - PDF generation
 - **Lucide React** - Icons
@@ -107,12 +124,13 @@ Each generated worksheet includes:
 ```
 src/
 ├── components/
-│   ├── APIKeySettings.tsx      # API key management
+│   ├── APIKeySettings.tsx      # API key management (Groq & OpenAI)
 │   ├── WorksheetForm.tsx       # Input form
 │   └── WorksheetPreview.tsx    # Worksheet display
 ├── utils/
 │   ├── aiGenerator.ts          # Local question generator (fallback)
-│   └── openAIService.ts        # OpenAI API integration
+│   ├── groqService.ts          # Groq API integration (Llama 3.3)
+│   └── openAIService.ts        # OpenAI API integration (GPT-4o-mini)
 ├── types.ts                    # TypeScript definitions
 ├── App.tsx                     # Main app component
 └── index.css                   # Global styles
@@ -121,17 +139,28 @@ src/
 ### API Key Security
 
 - API keys are stored in browser localStorage
-- Keys are only sent to OpenAI's API endpoint
+- Keys are only sent to the selected AI provider's API endpoint (Groq or OpenAI)
 - No keys are transmitted to any other server
 - Users can delete their key at any time
+- Supports both Groq and OpenAI providers
 
 ### Question Generation
 
+**With Groq API (Recommended):**
+- Uses Llama 3.3 70B Versatile model
+- Generates unique, contextually relevant questions
+- Adapts to specific topics and class levels
+- Provides detailed explanations
+- Very fast inference (5-15 seconds)
+- Free tier available
+
 **With OpenAI API:**
+- Uses GPT-4o-mini model
 - Generates unique, contextually relevant questions
 - Adapts to specific topics and class levels
 - Provides detailed explanations
 - Takes 10-20 seconds to generate
+- Paid API (requires credits)
 
 **Without API Key (Fallback):**
 - Uses predefined question banks
@@ -159,13 +188,16 @@ src/
 ## Troubleshooting
 
 **"Invalid API key" error:**
-- Check that your API key starts with "sk-"
-- Verify the key is active in your OpenAI account
-- Ensure you have available credits
+- For Groq: Check that your key starts with "gsk_"
+- For OpenAI: Check that your key starts with "sk-"
+- Verify the key is active in your account
+- Ensure you have available credits (OpenAI) or are within free tier limits (Groq)
 
 **"Rate limit exceeded" error:**
 - Wait a few minutes before trying again
-- Check your OpenAI usage limits
+- Check your usage limits
+- Groq has generous free tier limits
+- OpenAI requires sufficient credits
 
 **Questions not relevant to topic:**
 - Be more specific in your topic description
@@ -179,9 +211,10 @@ src/
 ## Privacy & Data
 
 - **API Keys:** Stored locally in your browser only
-- **Generated Content:** Not stored or transmitted anywhere
+- **Generated Content:** Not stored or transmitted anywhere except to the selected AI provider
 - **Student Data:** Only used for display on worksheets, not stored
 - **No Tracking:** No analytics or user tracking implemented
+- **Provider Choice:** Use either Groq (free tier) or OpenAI (paid)
 
 ## Future Enhancements
 
@@ -201,8 +234,9 @@ This project is created for Kids Knowledge Nest (www.kidsknowledgenest.com)
 
 For issues or questions:
 - Check the troubleshooting section above
-- Verify your OpenAI API key is valid
-- Ensure you have sufficient API credits
+- Verify your API key is valid (Groq or OpenAI)
+- Ensure you have sufficient API credits or are within free tier limits
+- Try switching between Groq and OpenAI providers
 - Try the fallback generator without API key
 
 ---

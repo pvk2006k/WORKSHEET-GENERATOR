@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { WorksheetData } from './types';
 import { generateWorksheet } from './utils/aiGenerator';
-import { generateWorksheetWithAI, isAPIConfigured } from './utils/openAIService';
+import { generateWorksheetWithAI, isAPIConfigured as isOpenAIConfigured } from './utils/openAIService';
+import { generateWorksheetWithGroq, isGroqConfigured } from './utils/groqService';
 import WorksheetForm from './components/WorksheetForm';
 import WorksheetPreview from './components/WorksheetPreview';
 import APIKeySettings from './components/APIKeySettings';
@@ -23,7 +24,10 @@ function App() {
     try {
       let data: WorksheetData;
       
-      if (isAPIConfigured()) {
+      if (isGroqConfigured()) {
+        // Use Groq API
+        data = await generateWorksheetWithGroq(className, topic, numQuestions);
+      } else if (isOpenAIConfigured()) {
         // Use OpenAI API
         data = await generateWorksheetWithAI(className, topic, numQuestions);
       } else {
@@ -42,7 +46,7 @@ function App() {
   };
 
   const handleAPIKeySaved = () => {
-    setIsAPIReady(isAPIConfigured());
+    setIsAPIReady(isGroqConfigured() || isOpenAIConfigured());
   };
 
   const handleReset = () => {
@@ -143,11 +147,13 @@ function App() {
               <Loader2 className="w-8 h-8 text-purple-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
             </div>
             <h3 className="text-xl font-semibold text-gray-700 mt-6">
-              {isAPIConfigured() ? 'AI is Generating Your Worksheet...' : 'Generating Your Worksheet...'}
+              {(isGroqConfigured() || isOpenAIConfigured()) ? 'AI is Generating Your Worksheet...' : 'Generating Your Worksheet...'}
             </h3>
             <p className="text-gray-500 mt-2">
-              {isAPIConfigured() 
-                ? 'OpenAI is crafting personalized questions for you'
+              {isGroqConfigured() 
+                ? 'Groq (Llama) is crafting personalized questions for you'
+                : isOpenAIConfigured()
+                ? 'OpenAI (GPT) is crafting personalized questions for you'
                 : 'Creating questions from our question bank'}
             </p>
             <div className="flex gap-1 mt-4">
@@ -155,7 +161,7 @@ function App() {
               <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
               <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
             </div>
-            {isAPIConfigured() && (
+            {(isGroqConfigured() || isOpenAIConfigured()) && (
               <p className="text-xs text-gray-400 mt-4">This may take 10-20 seconds...</p>
             )}
           </div>
