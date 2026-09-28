@@ -1,5 +1,5 @@
 import { WorksheetData } from '../types';
-import { Printer, Download } from 'lucide-react';
+import { Printer, Download, Database } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -179,6 +179,89 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
     }
   };
 
+  const handleExportJSON = () => {
+    // Convert worksheet data to JSON format for database
+    const jsonData = {
+      practiceSetCode: worksheet.practiceSetId,
+      title: worksheet.title,
+      className: worksheet.className,
+      subject: worksheet.subject,
+      topic: worksheet.topic,
+      totalMarks: worksheet.totalMarks,
+      timeAllowed: worksheet.timeAllowed,
+      instructions: worksheet.instructions,
+      createdAt: new Date().toISOString(),
+      questions: worksheet.questions.map((q, index) => {
+        const baseQuestion = {
+          questionNumber: index + 1,
+          questionType: q.type,
+          questionText: q.question,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+          marks: q.points,
+          imageUrl: q.imageUrl || null
+        };
+
+        // Add type-specific fields
+        switch (q.type) {
+          case 'multiple-choice':
+            return {
+              ...baseQuestion,
+              options: q.options || []
+            };
+          
+          case 'true-false':
+            return {
+              ...baseQuestion,
+              options: ['True', 'False']
+            };
+          
+          case 'fill-in-blank':
+            return {
+              ...baseQuestion,
+              blankCount: (q.question.match(/_/g) || []).length || 1
+            };
+          
+          case 'one-liner':
+            return {
+              ...baseQuestion,
+              expectedAnswerLength: 'short'
+            };
+          
+          case 'match':
+            return {
+              ...baseQuestion,
+              columnA: q.matchColumnA || [],
+              columnB: q.matchColumnB || [],
+              correctMatches: q.correctAnswer
+            };
+          
+          default:
+            return baseQuestion;
+        }
+      })
+    };
+
+    // Create JSON blob and download
+    const jsonString = JSON.stringify(jsonData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${worksheet.practiceSetId}_data.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    // Also copy to clipboard for easy pasting to ASPX
+    navigator.clipboard.writeText(jsonString).then(() => {
+      alert('JSON exported and copied to clipboard! Ready to send to ASPX backend.');
+    }).catch(() => {
+      alert('JSON exported! (Could not copy to clipboard)');
+    });
+  };
+
   // Group questions by type
   const trueFalseQuestions = worksheet.questions.filter(q => q.type === 'true-false');
   const mcqQuestions = worksheet.questions.filter(q => q.type === 'multiple-choice');
@@ -214,6 +297,13 @@ export default function WorksheetPreview({ worksheet, studentName, worksheetRef 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           Download Images
+        </button>
+        <button
+          onClick={handleExportJSON}
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all shadow-md text-sm font-medium"
+        >
+          <Database className="w-4 h-4" />
+          Export JSON for DB
         </button>
       </div>
 
