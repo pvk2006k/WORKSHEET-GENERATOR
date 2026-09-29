@@ -1,66 +1,102 @@
-# Backend Integration Guide - ASPX & SQL Server
+# Backend Integration Guide - ASPX & SQL Server (Single Table Layout)
 
 ## Overview
 
-This guide explains how to integrate the worksheet generator with your ASPX backend and SQL Server database. The frontend now exports worksheet data as structured JSON that can be easily saved to your database.
+This guide explains how to integrate the worksheet generator with your ASPX backend and SQL Server database using a **simplified single-table layout** for all question types.
 
-## 📦 What's Included
+## 🎯 Single Table Architecture
 
-### Frontend (Already Implemented)
-- ✅ JSON export functionality
-- ✅ Structured data format for all question types
-- ✅ Download JSON file
-- ✅ Copy to clipboard
+### Why Single Table?
+- ✅ **Simpler** - Only 2 tables (Worksheets + Questions)
+- ✅ **Easier to query** - All questions in one place
+- ✅ **Flexible** - JSON columns handle type-specific data
+- ✅ **Maintainable** - No complex joins needed
+- ✅ **Scalable** - Easy to add new question types
 
-### Backend Files (Provided)
-1. **`database/SQL_Schema.sql`** - Complete database schema with tables, indexes, and stored procedures
-2. **`backend/SaveWorksheet.aspx`** - ASPX page to receive JSON data
-3. **`backend/SaveWorksheet.aspx.cs`** - C# code-behind with database logic
-4. **`backend/web.config.sample`** - Sample web.config with connection string
-5. **`backend/sample-api-integration.js`** - JavaScript examples for API calls
+## 🗄️ Database Schema (Simplified)
 
-## 🗄️ Database Schema
+### Table 1: Worksheets
+Stores main worksheet information:
+```sql
+- WorksheetID (Primary Key)
+- PracticeSetCode (Unique)
+- Title, ClassName, Subject, Topic
+- TotalMarks, TimeAllowed
+- Instructions (JSON array)
+- CreatedAt, IsActive
+```
 
-### Tables Created
+### Table 2: Questions (SINGLE TABLE for ALL types)
+Stores all question types with JSON for type-specific data:
+```sql
+- QuestionID (Primary Key)
+- WorksheetID (Foreign Key)
+- QuestionNumber
+- QuestionType ('multiple-choice', 'true-false', 'fill-in-blank', 'one-liner', 'match')
+- QuestionText
+- CorrectAnswer
+- Explanation
+- Marks
+- ImageUrl
+- TypeSpecificData (JSON - stores type-specific fields)
+```
 
-1. **Worksheets** - Main worksheet information
-   - PracticeSetCode (unique identifier)
-   - Title, ClassName, Subject, Topic
-   - TotalMarks, TimeAllowed
-   - Instructions, CreatedAt
+## 📦 TypeSpecificData JSON Examples
 
-2. **Questions** - All questions
-   - QuestionType (multiple-choice, true-false, fill-in-blank, one-liner, match)
-   - QuestionText, CorrectAnswer, Explanation
-   - Marks, ImageUrl
+### Multiple Choice
+```json
+{
+  "options": ["62", "52", "72", "42"]
+}
+```
 
-3. **QuestionOptions** - For MCQs and True/False
-   - OptionText, OptionOrder, IsCorrect
+### True/False
+```json
+{
+  "options": ["True", "False"]
+}
+```
 
-4. **MatchingItems** - For Match questions
-   - ColumnName (A or B), ItemText, ItemOrder
+### Fill in the Blank
+```json
+{
+  "blankCount": 2,
+  "blanks": ["25", "40"]
+}
+```
 
-5. **FillBlankDetails** - For Fill in the Blanks
-   - BlankNumber, BlankPosition, CorrectAnswer
+### One Liner
+```json
+{
+  "expectedLength": "short"
+}
+```
 
-### Stored Procedures
-
-- **`sp_InsertWorksheetFromJSON`** - Insert complete worksheet from JSON in one call
-- **`sp_GetWorksheetDetails`** - Retrieve complete worksheet with all questions
+### Matching
+```json
+{
+  "columnA": ["10 + 5", "20 + 30", "15 + 15"],
+  "columnB": ["50", "30", "15"],
+  "correctMatches": "10+5→15, 20+30→50, 15+15→30"
+}
+```
 
 ## 🚀 Setup Instructions
 
 ### Step 1: Create Database
-
 ```sql
--- Run the SQL schema script
+-- Run this script in SQL Server Management Studio
 -- File: database/SQL_Schema.sql
 ```
 
+This creates:
+- 2 tables (Worksheets, Questions)
+- Indexes for performance
+- Stored procedures for CRUD operations
+- Sample data for testing
+
 ### Step 2: Configure Connection String
-
-Edit `backend/web.config.sample` and update:
-
+Edit `backend/web.config.sample`:
 ```xml
 <connectionStrings>
   <add name="WorksheetDB" 
@@ -69,30 +105,26 @@ Edit `backend/web.config.sample` and update:
 </connectionStrings>
 ```
 
-Rename to `web.config` and deploy to your server.
+Rename to `web.config` and deploy.
 
 ### Step 3: Deploy ASPX Files
-
-Copy these files to your ASP.NET application:
+Copy to your ASP.NET application:
 - `SaveWorksheet.aspx`
 - `SaveWorksheet.aspx.cs`
 
-### Step 4: Test the Endpoint
-
+### Step 4: Test
 ```bash
 curl -X POST https://yourserver.com/SaveWorksheet.aspx \
   -H "Content-Type: application/json" \
-  -d @sample_data.json
+  -d @sample-worksheet-data.json
 ```
 
-## 📤 JSON Structure
-
-### Complete JSON Format
+## 📤 Complete JSON Structure
 
 ```json
 {
-  "practiceSetCode": "PSET-CLASS5-ABC123",
-  "title": "Mathematics - Addition Practice Worksheet",
+  "practiceSetCode": "PSET-CLASS5-MATH-001",
+  "title": "Mathematics - Addition Practice",
   "className": "Class 5",
   "subject": "Mathematics",
   "topic": "Addition",
@@ -100,7 +132,8 @@ curl -X POST https://yourserver.com/SaveWorksheet.aspx \
   "timeAllowed": "30 minutes",
   "instructions": [
     "Read each question carefully",
-    "Write your answers neatly"
+    "Write answers neatly",
+    "Attempt all questions"
   ],
   "createdAt": "2024-01-15T10:30:00.000Z",
   "questions": [
@@ -147,10 +180,10 @@ curl -X POST https://yourserver.com/SaveWorksheet.aspx \
     {
       "questionNumber": 5,
       "questionType": "match",
-      "questionText": "Match the addition problems with their answers:",
-      "columnA": ["10 + 5", "20 + 30", "15 + 15"],
-      "columnB": ["50", "30", "40"],
-      "correctMatches": "10+5→15, 20+30→50, 15+15→30",
+      "questionText": "Match the problems with answers:",
+      "columnA": ["10 + 5", "20 + 30"],
+      "columnB": ["50", "15"],
+      "correctMatches": "10+5→15, 20+30→50",
       "explanation": "Calculate each sum...",
       "marks": 4,
       "imageUrl": null
@@ -159,71 +192,94 @@ curl -X POST https://yourserver.com/SaveWorksheet.aspx \
 }
 ```
 
-### Question Type Specific Fields
+## 🔌 API Endpoints
 
-#### Multiple Choice
+### Save Worksheet
+**POST** `/SaveWorksheet.aspx`
+
+**Request:** JSON payload (see above)
+
+**Response (Success):**
 ```json
 {
-  "questionType": "multiple-choice",
-  "options": ["Option A", "Option B", "Option C", "Option D"],
-  "correctAnswer": "Option A"
+  "status": "success",
+  "message": "Worksheet saved successfully",
+  "worksheetId": 123,
+  "practiceSetCode": "PSET-CLASS5-MATH-001"
 }
 ```
 
-#### True/False
+**Response (Error):**
 ```json
 {
-  "questionType": "true-false",
-  "options": ["True", "False"],
-  "correctAnswer": "True"
+  "status": "error",
+  "message": "Invalid JSON format"
 }
 ```
 
-#### Fill in the Blanks
-```json
-{
-  "questionType": "fill-in-blank",
-  "blankCount": 1,
-  "correctAnswer": "25"
-}
+## 📊 Database Queries
+
+### Get All Worksheets
+```sql
+SELECT * FROM vw_WorksheetDetails 
+ORDER BY CreatedAt DESC;
 ```
 
-#### One Liner
-```json
-{
-  "questionType": "one-liner",
-  "expectedAnswerLength": "short",
-  "correctAnswer": "The same number"
-}
+### Get Worksheet with Questions
+```sql
+EXEC sp_GetWorksheetDetails 'PSET-CLASS5-MATH-001';
 ```
 
-#### Matching
-```json
-{
-  "questionType": "match",
-  "columnA": ["Item 1", "Item 2", "Item 3"],
-  "columnB": ["Match A", "Match B", "Match C"],
-  "correctMatches": "Item 1→Match A, Item 2→Match B, Item 3→Match C"
-}
+### Get Questions by Type
+```sql
+-- Get only MCQs
+EXEC sp_GetQuestionsByType @WorksheetID = 1, @QuestionType = 'multiple-choice';
+
+-- Get only True/False
+EXEC sp_GetQuestionsByType @WorksheetID = 1, @QuestionType = 'true-false';
+```
+
+### Parse JSON to Get Options (MCQ)
+```sql
+SELECT 
+    QuestionNumber,
+    QuestionText,
+    JSON_VALUE(TypeSpecificData, '$.options[0]') AS Option1,
+    JSON_VALUE(TypeSpecificData, '$.options[1]') AS Option2,
+    JSON_VALUE(TypeSpecificData, '$.options[2]') AS Option3,
+    JSON_VALUE(TypeSpecificData, '$.options[3]') AS Option4,
+    CorrectAnswer
+FROM Questions
+WHERE WorksheetID = 1 
+  AND QuestionType = 'multiple-choice';
+```
+
+### Parse JSON to Get Matching Columns
+```sql
+SELECT 
+    QuestionNumber,
+    QuestionText,
+    JSON_QUERY(TypeSpecificData, '$.columnA') AS ColumnA,
+    JSON_QUERY(TypeSpecificData, '$.columnB') AS ColumnB,
+    JSON_VALUE(TypeSpecificData, '$.correctMatches') AS CorrectMatches
+FROM Questions
+WHERE WorksheetID = 1 
+  AND QuestionType = 'match';
+```
+
+### Count Questions by Type
+```sql
+SELECT 
+    QuestionType,
+    COUNT(*) AS Count
+FROM Questions
+WHERE WorksheetID = 1
+GROUP BY QuestionType;
 ```
 
 ## 💻 Frontend Integration
 
-### Add Save to Database Button
-
-In your `WorksheetPreview.tsx`, add this button:
-
-```tsx
-<button
-  onClick={handleSaveToDatabase}
-  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all shadow-md text-sm font-medium"
->
-  <Database className="w-4 h-4" />
-  Save to Database
-</button>
-```
-
-### Add Save Function
+### Add Save Button to WorksheetPreview.tsx
 
 ```tsx
 const handleSaveToDatabase = async () => {
@@ -290,162 +346,91 @@ const handleSaveToDatabase = async () => {
 };
 ```
 
-## 🔌 API Endpoints
+## 📁 Files Provided
 
-### Save Worksheet
+### Database
+- 📄 `database/SQL_Schema.sql` - Complete schema with 2 tables
 
-**Endpoint:** `POST /SaveWorksheet.aspx`
+### Backend
+- 📄 `backend/SaveWorksheet.aspx` - ASPX endpoint
+- 📄 `backend/SaveWorksheet.aspx.cs` - C# code (simplified for single table)
+- 📄 `backend/web.config.sample` - Configuration
+- 📄 `backend/sample-worksheet-data.json` - Sample JSON
+- 📄 `backend/sample-api-integration.js` - JavaScript examples
 
-**Request:**
-```json
-{
-  "practiceSetCode": "PSET-CLASS5-ABC123",
-  "title": "...",
-  "questions": [...]
-}
-```
+### Documentation
+- 📄 `backend/README.md` - This guide
+- 📄 `JSON_EXPORT_GUIDE.md` - JSON export documentation
 
-**Response (Success):**
-```json
-{
-  "status": "success",
-  "message": "Worksheet saved successfully",
-  "worksheetId": 123,
-  "practiceSetCode": "PSET-CLASS5-ABC123"
-}
-```
+## 🔒 Security
 
-**Response (Error):**
-```json
-{
-  "status": "error",
-  "message": "Invalid JSON format",
-  "details": "Missing required field: practiceSetCode"
-}
-```
-
-### Retrieve Worksheet
-
-**Endpoint:** `GET /GetWorksheet.aspx?code=PSET-CLASS5-ABC123`
-
-**Response:**
-```json
-{
-  "worksheet": {
-    "worksheetId": 123,
-    "practiceSetCode": "PSET-CLASS5-ABC123",
-    "title": "...",
-    "questions": [...]
-  }
-}
-```
-
-## 🧪 Testing
-
-### Test with Sample Data
-
-1. Generate a worksheet in the frontend
-2. Click "Export JSON for DB"
-3. Copy the JSON
-4. Send to backend using curl or Postman:
-
-```bash
-curl -X POST https://yourserver.com/SaveWorksheet.aspx \
-  -H "Content-Type: application/json" \
-  -d '{"practiceSetCode":"TEST-001","title":"Test Worksheet",...}'
-```
-
-### Verify Database
-
-```sql
--- Check if worksheet was saved
-SELECT * FROM Worksheets WHERE PracticeSetCode = 'TEST-001';
-
--- Check questions
-SELECT * FROM Questions WHERE WorksheetID = (SELECT WorksheetID FROM Worksheets WHERE PracticeSetCode = 'TEST-001');
-
--- Check options
-SELECT * FROM QuestionOptions WHERE QuestionID IN (SELECT QuestionID FROM Questions WHERE WorksheetID = (SELECT WorksheetID FROM Worksheets WHERE PracticeSetCode = 'TEST-001'));
-```
-
-## 🔒 Security Considerations
-
-1. **Validate Input** - Always validate JSON structure before processing
-2. **SQL Injection** - Use parameterized queries (already implemented)
-3. **Authentication** - Add authentication to protect the endpoint
-4. **Rate Limiting** - Implement rate limiting to prevent abuse
-5. **Input Sanitization** - Sanitize all user inputs before storing
-
-## 📊 Database Queries
-
-### Get All Worksheets
-```sql
-SELECT * FROM vw_WorksheetDetails ORDER BY CreatedAt DESC;
-```
-
-### Get Worksheet by Class
-```sql
-SELECT * FROM vw_WorksheetDetails WHERE ClassName = 'Class 5';
-```
-
-### Get Worksheet by Subject
-```sql
-SELECT * FROM vw_WorksheetDetails WHERE Subject = 'Mathematics';
-```
-
-### Count Questions by Type
-```sql
-SELECT QuestionType, COUNT(*) as Count
-FROM Questions
-WHERE WorksheetID = @WorksheetID
-GROUP BY QuestionType;
-```
+- ✅ Parameterized SQL queries (no SQL injection)
+- ✅ JSON validation
+- ✅ Database transactions
+- ✅ Error handling
+- ⚠️ Add authentication before production
+- ⚠️ Implement rate limiting
+- ⚠️ Validate all inputs
 
 ## 🐛 Troubleshooting
 
 ### Issue: JSON not saving
-- Check connection string in web.config
-- Verify database tables exist
-- Check SQL Server logs for errors
+- Check connection string
+- Verify tables exist
+- Check SQL Server logs
 
-### Issue: Options not saving
-- Ensure question type is 'multiple-choice' or 'true-false'
-- Check if options array is not empty
-
-### Issue: Matching items not saving
-- Ensure question type is 'match'
-- Check if columnA and columnB arrays are populated
+### Issue: TypeSpecificData is NULL
+- Ensure question type is correct
+- Check JSON structure matches expected format
 
 ### Issue: Large JSON fails
 - Increase `maxRequestLength` in web.config
-- Increase `maxAllowedContentLength` in web.config
+- Increase `maxAllowedContentLength`
 
-## 📝 Notes
+## 📝 Comparison: Old vs New Schema
 
-- All timestamps are in ISO 8601 format
-- PracticeSetCode must be unique
-- Questions are ordered by QuestionNumber
-- Options are ordered by OptionOrder
-- Matching items are separated by ColumnName (A or B)
+### Old Schema (Multiple Tables)
+```
+Worksheets
+Questions
+QuestionOptions      ← Separate table for MCQ options
+MatchingItems        ← Separate table for matching
+FillBlankDetails     ← Separate table for fill-in-blank
+```
+**Problems:**
+- Complex joins needed
+- Multiple INSERT statements
+- Harder to maintain
+- More storage overhead
 
-## 🎯 Next Steps
+### New Schema (Single Table)
+```
+Worksheets
+Questions            ← All question types in one table
+                     ← TypeSpecificData (JSON) stores type-specific fields
+```
+**Benefits:**
+- Simple queries
+- Single INSERT per question
+- Easy to maintain
+- Flexible for new question types
 
-1. Deploy SQL schema to your database
-2. Configure connection string
-3. Deploy ASPX files to your server
-4. Test with sample data
-5. Integrate save button in frontend
-6. Add authentication if needed
-7. Implement retrieval endpoints
+## 🎯 Key Advantages
+
+1. **Simplicity** - Only 2 tables instead of 5
+2. **Flexibility** - JSON columns handle any question type
+3. **Performance** - Fewer joins, faster queries
+4. **Maintainability** - Easier to understand and modify
+5. **Scalability** - Easy to add new question types without schema changes
 
 ## 📞 Support
 
-For issues or questions:
+For issues:
 - Check SQL Server logs
 - Review ASPX error messages
-- Verify JSON structure matches schema
+- Verify JSON structure
 - Test with sample data first
 
 ---
 
-**Your worksheet data is now ready to be saved to SQL Server!** 🎉
+**Your worksheet data is now ready to be saved with a simplified single-table schema!** 🎉

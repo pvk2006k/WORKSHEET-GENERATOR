@@ -11,10 +11,24 @@ public partial class SaveWorksheet : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        // Enable CORS
+        Response.AppendHeader("Access-Control-Allow-Origin", "*");
+        Response.AppendHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+        Response.AppendHeader("Access-Control-Allow-Headers", "Content-Type");
+
+        // Handle preflight OPTIONS request
+        if (Request.HttpMethod == "OPTIONS")
+        {
+            Response.StatusCode = 200;
+            Response.End();
+            return;
+        }
+
         // Only accept POST requests
         if (Request.HttpMethod != "POST")
         {
             Response.StatusCode = 405;
+            Response.ContentType = "application/json";
             Response.Write("{\"status\": \"error\", \"message\": \"Method not allowed\"}");
             return;
         }
@@ -31,6 +45,7 @@ public partial class SaveWorksheet : System.Web.UI.Page
             if (string.IsNullOrEmpty(jsonData))
             {
                 Response.StatusCode = 400;
+                Response.ContentType = "application/json";
                 Response.Write("{\"status\": \"error\", \"message\": \"No data received\"}");
                 return;
             }
@@ -43,6 +58,7 @@ public partial class SaveWorksheet : System.Web.UI.Page
             if (worksheetData == null)
             {
                 Response.StatusCode = 400;
+                Response.ContentType = "application/json";
                 Response.Write("{\"status\": \"error\", \"message\": \"Invalid JSON format\"}");
                 return;
             }
@@ -67,8 +83,7 @@ public partial class SaveWorksheet : System.Web.UI.Page
             Response.Write(new JavaScriptSerializer().Serialize(new
             {
                 status = "error",
-                message = ex.Message,
-                stackTrace = ex.StackTrace
+                message = ex.Message
             }));
         }
     }
@@ -76,38 +91,24 @@ public partial class SaveWorksheet : System.Web.UI.Page
     private int SaveWorksheetToDatabase(WorksheetData data)
     {
         string connectionString = ConfigurationManager.ConnectionStrings["WorksheetDB"].ConnectionString;
-        
+
         using (SqlConnection conn = new SqlConnection(connectionString))
         {
             conn.Open();
-            
+
             using (SqlTransaction transaction = conn.BeginTransaction())
             {
                 try
                 {
-                    // Insert worksheet
+                    // Step 1: Insert worksheet
                     int worksheetId = InsertWorksheet(conn, transaction, data);
-                    
-                    // Insert questions
+
+                    // Step 2: Insert all questions into SINGLE table
                     foreach (var question in data.Questions)
                     {
-                        int questionId = InsertQuestion(conn, transaction, worksheetId, question);
-                        
-                        // Insert type-specific data
-                        if (question.QuestionType == "multiple-choice" || question.QuestionType == "true-false")
-                        {
-                            InsertOptions(conn, transaction, questionId, question);
-                        }
-                        else if (question.QuestionType == "match")
-                        {
-                            InsertMatchingItems(conn, transaction, questionId, question);
-                        }
-                        else if (question.QuestionType == "fill-in-blank")
-                        {
-                            InsertFillBlankDetails(conn, transaction, questionId, question);
-                        }
+                        InsertQuestion(conn, transaction, worksheetId, question);
                     }
-                    
+
                     transaction.Commit();
                     return worksheetId;
                 }
@@ -142,22 +143,29 @@ public partial class SaveWorksheet : System.Web.UI.Page
             cmd.Parameters.AddWithValue("@Topic", data.Topic);
             cmd.Parameters.AddWithValue("@TotalMarks", data.TotalMarks);
             cmd.Parameters.AddWithValue("@TimeAllowed", data.TimeAllowed);
-            cmd.Parameters.AddWithValue("@Instructions", string.Join("|", data.Instructions));
-            
+
+            // Convert instructions list to JSON string
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            string instructionsJson = serializer.Serialize(data.Instructions);
+            cmd.Parameters.AddWithValue("@Instructions", instructionsJson);
+
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
     }
 
     private int InsertQuestion(SqlConnection conn, SqlTransaction transaction, int worksheetId, QuestionData question)
     {
+        // Build TypeSpecificData JSON based on question type
+        string typeSpecificData = BuildTypeSpecificData(question);
+
         string query = @"
             INSERT INTO Questions (
                 WorksheetID, QuestionNumber, QuestionType, QuestionText,
-                CorrectAnswer, Explanation, Marks, ImageUrl
+                CorrectAnswer, Explanation, Marks, ImageUrl, TypeSpecificData
             )
             VALUES (
                 @WorksheetID, @QuestionNumber, @QuestionType, @QuestionText,
-                @CorrectAnswer, @Explanation, @Marks, @ImageUrl
+                @CorrectAnswer, @Explanation, @Marks, @ImageUrl, @TypeSpecificData
             );
             SELECT SCOPE_IDENTITY();";
 
@@ -171,101 +179,57 @@ public partial class SaveWorksheet : System.Web.UI.Page
             cmd.Parameters.AddWithValue("@Explanation", (object)question.Explanation ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@Marks", question.Marks);
             cmd.Parameters.AddWithValue("@ImageUrl", (object)question.ImageUrl ?? DBNull.Value);
-            
+            cmd.Parameters.AddWithValue("@TypeSpecificData", (object)typeSpecificData ?? DBNull.Value);
+
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
     }
 
-    private void InsertOptions(SqlConnection conn, SqlTransaction transaction, int questionId, QuestionData question)
+    private string BuildTypeSpecificData(QuestionData question)
     {
-        if (question.Options == null || question.Options.Count == 0)
-            return;
+        JavaScriptSerializer serializer = new JavaScriptSerializer();
+        Dictionary<string, object> data = new Dictionary<string, object>();
 
-        string query = @"
-            INSERT INTO QuestionOptions (QuestionID, OptionText, OptionOrder, IsCorrect)
-            VALUES (@QuestionID, @OptionText, @OptionOrder, @IsCorrect);";
-
-        using (SqlCommand cmd = new SqlCommand(query, conn, transaction))
+        switch (question.QuestionType.ToLower())
         {
-            for (int i = 0; i < question.Options.Count; i++)
-            {
-                cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("@QuestionID", questionId);
-                cmd.Parameters.AddWithValue("@OptionText", question.Options[i]);
-                cmd.Parameters.AddWithValue("@OptionOrder", i + 1);
-                cmd.Parameters.AddWithValue("@IsCorrect", question.Options[i] == question.CorrectAnswer);
-                cmd.ExecuteNonQuery();
-            }
-        }
-    }
+            case "multiple-choice":
+                data["options"] = question.Options ?? new List<string>();
+                break;
 
-    private void InsertMatchingItems(SqlConnection conn, SqlTransaction transaction, int questionId, QuestionData question)
-    {
-        string query = @"
-            INSERT INTO MatchingItems (QuestionID, ColumnName, ItemText, ItemOrder, CorrectMatch)
-            VALUES (@QuestionID, @ColumnName, @ItemText, @ItemOrder, @CorrectMatch);";
+            case "true-false":
+                data["options"] = new List<string> { "True", "False" };
+                break;
 
-        using (SqlCommand cmd = new SqlCommand(query, conn, transaction))
-        {
-            // Insert Column A items
-            if (question.ColumnA != null)
-            {
-                for (int i = 0; i < question.ColumnA.Count; i++)
+            case "fill-in-blank":
+                data["blankCount"] = question.BlankCount;
+                if (question.Blanks != null && question.Blanks.Count > 0)
                 {
-                    cmd.Parameters.Clear();
-                    cmd.Parameters.AddWithValue("@QuestionID", questionId);
-                    cmd.Parameters.AddWithValue("@ColumnName", "A");
-                    cmd.Parameters.AddWithValue("@ItemText", question.ColumnA[i]);
-                    cmd.Parameters.AddWithValue("@ItemOrder", i + 1);
-                    cmd.Parameters.AddWithValue("@CorrectMatch", DBNull.Value);
-                    cmd.ExecuteNonQuery();
+                    data["blanks"] = question.Blanks;
                 }
-            }
+                break;
 
-            // Insert Column B items
-            if (question.ColumnB != null)
-            {
-                for (int i = 0; i < question.ColumnB.Count; i++)
-                {
-                    cmd.Parameters.Clear();
-                    cmd.Parameters.AddWithValue("@QuestionID", questionId);
-                    cmd.Parameters.AddWithValue("@ColumnName", "B");
-                    cmd.Parameters.AddWithValue("@ItemText", question.ColumnB[i]);
-                    cmd.Parameters.AddWithValue("@ItemOrder", i + 1);
-                    cmd.Parameters.AddWithValue("@CorrectMatch", DBNull.Value);
-                    cmd.ExecuteNonQuery();
-                }
-            }
+            case "one-liner":
+                data["expectedLength"] = question.ExpectedAnswerLength ?? "short";
+                break;
+
+            case "match":
+                data["columnA"] = question.ColumnA ?? new List<string>();
+                data["columnB"] = question.ColumnB ?? new List<string>();
+                data["correctMatches"] = question.CorrectMatches ?? "";
+                break;
+
+            default:
+                return null;
         }
-    }
 
-    private void InsertFillBlankDetails(SqlConnection conn, SqlTransaction transaction, int questionId, QuestionData question)
-    {
-        if (question.BlankCount <= 0)
-            return;
-
-        string query = @"
-            INSERT INTO FillBlankDetails (QuestionID, BlankNumber, BlankPosition, CorrectAnswer)
-            VALUES (@QuestionID, @BlankNumber, @BlankPosition, @CorrectAnswer);";
-
-        using (SqlCommand cmd = new SqlCommand(query, conn, transaction))
-        {
-            // For simplicity, we'll just store the correct answer for each blank
-            // In a real scenario, you'd parse the question text to find blank positions
-            for (int i = 1; i <= question.BlankCount; i++)
-            {
-                cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("@QuestionID", questionId);
-                cmd.Parameters.AddWithValue("@BlankNumber", i);
-                cmd.Parameters.AddWithValue("@BlankPosition", 0); // Would need to parse question text
-                cmd.Parameters.AddWithValue("@CorrectAnswer", question.CorrectAnswer);
-                cmd.ExecuteNonQuery();
-            }
-        }
+        return serializer.Serialize(data);
     }
 }
 
+// =============================================
 // Data models for JSON deserialization
+// =============================================
+
 public class WorksheetData
 {
     public string PracticeSetCode { get; set; }
@@ -289,18 +253,19 @@ public class QuestionData
     public string Explanation { get; set; }
     public int Marks { get; set; }
     public string ImageUrl { get; set; }
-    
+
     // For MCQs and True/False
     public List<string> Options { get; set; }
-    
+
     // For Matching
     public List<string> ColumnA { get; set; }
     public List<string> ColumnB { get; set; }
     public string CorrectMatches { get; set; }
-    
+
     // For Fill in the Blanks
     public int BlankCount { get; set; }
-    
+    public List<string> Blanks { get; set; }
+
     // For One Liner
     public string ExpectedAnswerLength { get; set; }
 }
