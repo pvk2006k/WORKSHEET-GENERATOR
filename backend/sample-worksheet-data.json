@@ -1,0 +1,120 @@
+{
+  "practiceSetCode": "PSET-CLASS5-MATH-ADD-001",
+  "title": "Mathematics - Addition Practice Worksheet",
+  "className": "Class 5",
+  "subject": "Mathematics",
+  "topic": "Addition",
+  "totalMarks": 20,
+  "timeAllowed": "30 minutes",
+  "instructions": [
+    "Read each question carefully before answering.",
+    "Write your answers neatly in the space provided.",
+    "Each question carries equal marks as indicated.",
+    "Attempt all questions.",
+    "Check your answers before submitting."
+  ],
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "questions": [
+    {
+      "questionNumber": 1,
+      "questionType": "true-false",
+      "questionText": "The sum of two odd numbers is always even.",
+      "options": ["True", "False"],
+      "correctAnswer": "True",
+      "explanation": "Odd + Odd = Even. For example: 3 + 5 = 8, which is even.",
+      "marks": 2,
+      "imageUrl": null
+    },
+    {
+      "questionNumber": 2,
+      "questionType": "true-false",
+      "questionText": "Adding zero to any number changes its value.",
+      "options": ["True", "False"],
+      "correctAnswer": "False",
+      "explanation": "Adding zero to any number gives the same number. This is the identity property of addition.",
+      "marks": 2,
+      "imageUrl": null
+    },
+    {
+      "questionNumber": 3,
+      "questionType": "multiple-choice",
+      "questionText": "What is 25 + 37?",
+      "options": ["62", "52", "72", "42"],
+      "correctAnswer": "62",
+      "explanation": "25 + 37 = 62. Add the ones place first (5+7=12), carry over 1, then add tens (2+3+1=6).",
+      "marks": 2,
+      "imageUrl": null
+    },
+    {
+      "questionNumber": 4,
+      "questionType": "multiple-choice",
+      "questionText": "Which of the following equals 100?",
+      "options": ["45 + 55", "45 + 45", "50 + 40", "60 + 30"],
+      "correctAnswer": "45 + 55",
+      "explanation": "45 + 55 = 100. Let's verify: 45 + 55 = 100 ✓",
+      "marks": 2,
+      "imageUrl": null
+    },
+    {
+      "questionNumber": 5,
+      "questionType": "multiple-choice",
+      "questionText": "What is the sum of 125 + 275?",
+      "options": ["400", "300", "500", "350"],
+      "correctAnswer": "400",
+      "explanation": "125 + 275 = 400. Add hundreds (1+2=3), tens (2+7=9), ones (5+5=10, carry 1), total = 400.",
+      "marks": 2,
+      "imageUrl": null
+    },
+    {
+      "questionNumber": 6,
+      "questionType": "fill-in-blank",
+      "questionText": "15 + ___ = 40",
+      "blankCount": 1,
+      "correctAnswer": "25",
+      "explanation": "40 - 15 = 25. To find the missing number, subtract 15 from 40.",
+      "marks": 2,
+      "imageUrl": null
+    },
+    {
+      "questionNumber": 7,
+      "questionType": "fill-in-blank",
+      "questionText": "___ + 30 = 75",
+      "blankCount": 1,
+      "correctAnswer": "45",
+      "explanation": "75 - 30 = 45. Subtract 30 from 75 to find the missing number.",
+      "marks": 2,
+      "imageUrl": null
+    },
+    {
+      "questionNumber": 8,
+      "questionType": "one-liner",
+      "questionText": "What do we call the result of an addition problem?",
+      "expectedAnswerLength": "short",
+      "correctAnswer": "Sum",
+      "explanation": "The result of adding two or more numbers is called the sum.",
+      "marks": 2,
+      "imageUrl": null
+    },
+    {
+      "questionNumber": 9,
+      "questionType": "one-liner",
+      "questionText": "What property states that changing the order of addends doesn't change the sum?",
+      "expectedAnswerLength": "short",
+      "correctAnswer": "Commutative Property",
+      "explanation": "The Commutative Property of Addition states that a + b = b + a.",
+      "marks": 2,
+      "imageUrl": null
+    },
+    {
+      "questionNumber": 10,
+      "questionType": "match",
+      "questionText": "Match the addition problems with their correct answers:",
+      "columnA": ["10 + 5", "20 + 30", "15 + 15", "25 + 25"],
+      "columnB": ["50", "30", "40", "15"],
+      "correctMatches": "10+5→15, 20+30→50, 15+15→30, 25+25→50",
+      "explanation": "Calculate each sum: 10+5=15, 20+30=50, 15+15=30, 25+25=50",
+      "marks": 4,
+      "imageUrl": null
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+<!-- Add this to your web.config file -->
+<configuration>
+  <connectionStrings>
+    <add name="WorksheetDB" 
+         connectionString="Server=YOUR_SERVER_NAME;Database=WorksheetDatabase;User Id=YOUR_USERNAME;Password=YOUR_PASSWORD;TrustServerCertificate=True;" 
+         providerName="System.Data.SqlClient" />
+  </connectionStrings>
+  
+  <system.web>
+    <!-- Increase max request length for large JSON payloads -->
+    <httpRuntime maxRequestLength="1048576" executionTimeout="3600" />
+  </system.web>
+  
+  <system.webServer>
+    <security>
+      <requestFiltering>
+        <!-- Increase max allowed content length (1GB) -->
+        <requestLimits maxAllowedContentLength="1073741824" />
+      </requestFiltering>
+    </security>
+    
+    <!-- Enable CORS if needed -->
+    <httpProtocol>
+      <customHeaders>
+        <add name="Access-Control-Allow-Origin" value="*" />
+        <add name="Access-Control-Allow-Methods" value="POST, GET, OPTIONS" />
+        <add name="Access-Control-Allow-Headers" value="Content-Type" />
+      </customHeaders>
+    </httpProtocol>
+  </system.webServer>
+</configuration>
